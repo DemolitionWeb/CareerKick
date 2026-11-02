@@ -168,18 +168,24 @@ async function main() {
     }
 
     const career = await sparql(`
-      SELECT ?player ?team ?start ?end WHERE {
+      SELECT ?player ?team ?start ?end ?apps ?goals WHERE {
         VALUES ?player { ${values} }
         ?player p:P54 ?st . ?st ps:P54 ?team .
         FILTER NOT EXISTS { ?team wdt:P31 wd:${NATIONAL_TEAM} }
         OPTIONAL { ?st pq:P580 ?start }
         OPTIONAL { ?st pq:P582 ?end }
+        OPTIONAL { ?st pq:P1350 ?apps }
+        OPTIONAL { ?st pq:P1351 ?goals }
       }`);
     for (const r of career) {
       if (!r.start) continue;
       const p = players.get(qid(r.player.value));
       const team = qid(r.team.value);
-      (p.stints ??= []).push({ team, a: frac(r.start.value), b: r.end ? frac(r.end.value) : null });
+      const num = (b) => (b && /^\d+$/.test(b.value) ? Number(b.value) : null);
+      (p.stints ??= []).push({
+        team, a: frac(r.start.value), b: r.end ? frac(r.end.value) : null,
+        apps: num(r.apps), goals: num(r.goals)
+      });
       teams.add(team);
     }
   }
@@ -225,14 +231,23 @@ async function main() {
   const out = [];
   for (const [id, p] of players) {
     if (!p.n || !p.b || !p.pos || !p.stints) continue;
-    const seen = new Set();
-    const stints = p.stints
-      .filter(({ team }) => clubs[team] && !EXCLUDE_TEAM.test(clubs[team].en || Object.values(clubs[team])[0]))
-      .sort((x, y) => x.a - y.a)
-      .filter(({ team, a }) => { const k = team + Math.floor(a); if (seen.has(k)) return false; seen.add(k); return true; });
+    // stesso club nello stesso anno = un solo periodo, unendo le statistiche se una delle due righe le ha
+    const byKey = new Map();
+    for (const s of p.stints) {
+      if (!clubs[s.team] || EXCLUDE_TEAM.test(clubs[s.team].en || Object.values(clubs[s.team])[0])) continue;
+      const k = s.team + Math.floor(s.a), prev = byKey.get(k);
+      if (!prev) byKey.set(k, { ...s });
+      else { prev.b ??= s.b; prev.apps ??= s.apps; prev.goals ??= s.goals; }
+    }
+    const stints = [...byKey.values()].sort((x, y) => x.a - y.a);
+    // [club, campionato, anno arrivo, anno uscita, presenze, gol]; null = dato assente (uscita null = ancora lì o ignota)
     const c = stints.map((s, i) => {
-      const end = s.b ?? (stints[i + 1]?.a ?? NOW);
-      return [s.team, leagueFor(s.team, s.a, Math.max(end, s.a + 0.1)), Math.floor(s.a)];
+      const next = stints[i + 1]?.a;
+      const end = s.b ?? next ?? NOW;
+      const row = [s.team, leagueFor(s.team, s.a, Math.max(end, s.a + 0.1)), Math.floor(s.a),
+        s.b != null ? Math.floor(s.b) : next != null ? Math.floor(next) : null, s.apps, s.goals];
+      while (row.length > 3 && row[row.length - 1] == null) row.pop();
+      return row;
     });
     if (c.length < 2 || c[c.length - 1][2] < SINCE) continue;
     if (!c.some((x) => x[1] !== "X")) continue;

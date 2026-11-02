@@ -4,7 +4,11 @@ Gioco a quiz: indovina il calciatore dal suo percorso in carriera.
 
 ## Funzioni
 - **6 lingue**: IT, EN, ES, FR, DE, PT (`js/i18n.js`; per aggiungerne una copia un blocco).
-- **3 difficoltà**, sempre scrivendo il nome: Facile (solo campioni, più indizi subito, 6 tentativi), Media (5 tentativi), Difficile (tutti i giocatori, niente anni né suggerimenti, 4 tentativi). Basta anche il solo cognome.
+- **3 difficoltà**, sempre scrivendo il nome (basta anche il cognome):
+  - Facile: campioni famosi, tutta la carriera visibile con anni di arrivo/uscita, presenze e gol, 6 tentativi;
+  - Media: giocatori noti, tutta la carriera con gli anni ma senza statistiche, 5 tentativi;
+  - Difficile: tutti i giocatori, un club alla volta, niente suggerimenti, 4 tentativi.
+  Gli indizi svelano i club nascosti, poi nazionalità, ruolo e anno di nascita.
 
 ## Dataset giocatori (Wikidata)
 `js/data.js` si genera con:

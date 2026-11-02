@@ -84,7 +84,7 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: va
 
 .career { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: step; }
 .career li {
-  display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 10px;
+  display: grid; grid-template-columns: 82px 1fr auto; align-items: center; gap: 10px;
   background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--lg, var(--X));
   border-radius: 12px; padding: 10px 12px; min-height: 48px;
 }
@@ -92,7 +92,8 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: va
 .career li.new { animation: pop .35s ease; }
 @keyframes pop { from { transform: scale(.94); opacity: .2; } }
 .yr { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
-.club { font-weight: 700; }
+.club { font-weight: 700; min-width: 0; }
+.club .st { display: block; font-weight: 500; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .lg { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--lg) 35%, transparent); white-space: nowrap; }
 
 .info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
@@ -150,6 +151,6 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: va
 
 @media (max-width: 380px) {
   .info { grid-template-columns: 1fr 1fr; }
-  .career li { grid-template-columns: 44px 1fr; }
+  .career li { grid-template-columns: 76px 1fr; }
   .career li .lg { grid-column: 2; justify-self: start; }
 }

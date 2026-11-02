@@ -6,12 +6,13 @@
   const LEAGUE_NAMES = { SA: "Serie A", PL: "Premier League", LL: "LaLiga", BL: "Bundesliga", L1: "Ligue 1" };
   const INFO_KEYS = ["nationality", "position", "born"];
 
-  // tiers: livello massimo di notorietà incluso; startClubs: club visibili all'inizio;
-  // suggest: mostra i suggerimenti mentre si scrive (in Difficile il nome va scritto per intero)
+  // tiers: livello massimo di notorietà incluso; startClubs: club visibili all'inizio (Infinity = carriera completa);
+  // stats: presenze e gol per club; suggest: suggerimenti mentre si scrive (in Difficile il nome va scritto per intero).
+  // Gli indizi successivi svelano i club ancora nascosti, poi nazionalità, ruolo e anno di nascita.
   const DIFF = {
-    easy:   { tiers: 1, attempts: 6, startClubs: 2, years: true,  infoUpfront: true,  suggest: true,  mult: 1, time: 90, minChars: 2 },
-    medium: { tiers: 2, attempts: 5, startClubs: 1, years: true,  infoUpfront: false, suggest: true,  mult: 2, time: 60, minChars: 3 },
-    hard:   { tiers: 3, attempts: 4, startClubs: 1, years: false, infoUpfront: false, suggest: false, mult: 3, time: 40, minChars: 3 }
+    easy:   { tiers: 1, attempts: 6, startClubs: Infinity, years: true, stats: true,  infoUpfront: false, suggest: true,  mult: 1, time: 90, minChars: 2 },
+    medium: { tiers: 2, attempts: 5, startClubs: Infinity, years: true, stats: false, infoUpfront: false, suggest: true,  mult: 2, time: 60, minChars: 3 },
+    hard:   { tiers: 3, attempts: 4, startClubs: 1,        years: true, stats: false, infoUpfront: false, suggest: false, mult: 3, time: 40, minChars: 3 }
   };
 
   // localStorage può non essere disponibile (navigazione privata, webview restrittive)
@@ -37,7 +38,14 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const leagueLabel = (lg) => LEAGUE_NAMES[lg] || t("other");
   // il dataset generato da Wikidata usa ID di club con nomi per lingua; quello scritto a mano usa il nome diretto
-  const clubName = (id) => { const c = CLUBS[id]; return c ? c[settings.lang] || c.en || Object.values(c)[0] : id; };
+  // se il nome nella lingua scelta è lunghissimo (es. traslitterazioni complete) si usa il più corto disponibile
+  const clubName = (id) => {
+    const c = CLUBS[id];
+    if (!c) return id;
+    const name = c[settings.lang] || c.en || Object.values(c)[0];
+    if (name.length <= 28) return name;
+    return Object.values(c).reduce((a, b) => (b.length < a.length ? b : a), name);
+  };
 
   function natName(code) {
     if (CUSTOM_NATIONS[code]) return CUSTOM_NATIONS[code][settings.lang] || CUSTOM_NATIONS[code].en;
@@ -244,9 +252,12 @@
     const prevClubs = Math.min(g.prevRevealed, p.c.length);
     $("#career").innerHTML = p.c.map((c, i) => {
       if (i >= clubsShown) return `<li class="hidden"><span class="yr">${i + 1}.</span><span class="club">???</span></li>`;
-      const yr = d.years || showAll ? c[2] : "····";
+      // c = [club, campionato, anno arrivo, anno uscita, presenze, gol]
+      const yr = d.years || showAll ? `${c[2]}–${c[3] ?? ""}` : "····";
       const fresh = !showAll && i >= prevClubs && g.prevRevealed ? " new" : "";
-      return `<li class="${fresh}" style="--lg:var(--${c[1]})"><span class="yr">${yr}</span><span class="club">${esc(clubName(c[0]))}</span><span class="lg">${esc(leagueLabel(c[1]))}</span></li>`;
+      const stats = (d.stats || showAll) && c[4] != null
+        ? `<small class="st">${c[4]} ${esc(t("apps"))} · ${c[5] ?? "–"} ${esc(t("goals"))}</small>` : "";
+      return `<li class="${fresh}" style="--lg:var(--${c[1]})"><span class="yr">${yr}</span><span class="club">${esc(clubName(c[0]))}${stats}</span><span class="lg">${esc(leagueLabel(c[1]))}</span></li>`;
     }).join("");
 
     const infoShown = d.infoUpfront || showAll ? INFO_KEYS.length : Math.max(0, g.revealed - p.c.length);
