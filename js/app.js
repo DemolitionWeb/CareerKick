@@ -392,6 +392,10 @@
 
     applyI18n();
     renderHome();
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("sw.js").catch(() => { /* l'app funziona anche senza */ });
+    }
   }
 
   init();

@@ -26,6 +26,16 @@ python -m http.server 5173
 ```
 poi apri http://localhost:5173
 
+## Pubblicazione web (GitHub Pages)
+- `.github/workflows/deploy.yml` pubblica il sito a ogni push su `main`.
+- Il sito è una PWA: da Chrome si installa come app (icona "Installa" nella barra degli indirizzi) e funziona offline.
+- Dominio: va impostato in Settings → Pages → Custom domain, con i record DNS indicati da GitHub.
+
+## Aggiornamento dopo il calciomercato
+`.github/workflows/update-players.yml` rigenera i giocatori da Wikidata il 4 e il 16 settembre e il 5 e il 17 febbraio,
+poi ripubblica il sito se ci sono novità. Se i giocatori calano di oltre il 10% l'aggiornamento si annulla.
+Si può lanciare a mano: GitHub → Actions → "Aggiorna giocatori" → Run workflow.
+
 ## Da web app a app per gli store (Capacitor)
 ```
 npm init -y
