@@ -1,0 +1,11 @@
+{
+  "name": "CareerKick",
+  "short_name": "CareerKick",
+  "description": "Indovina il calciatore dal suo percorso in carriera",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07261d",
+  "theme_color": "#0b3d2e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,91 @@
+/* Dataset giocatori.
+ * Formato: [nome, nazionalità (ISO / ENG / WAL), ruolo, anno di nascita, tier, carriera, alias]
+ * tier: 1 = fuoriclasse famosissimo, 2 = noto, 3 = per intenditori
+ * carriera: "Club|Campionato|Anno arrivo; ..."  Campionati: SA PL LL BL L1, X = altro
+ * I dati sono fatti pubblici scritti a mano: verificarli prima del rilascio.
+ */
+const RAW_PLAYERS = [
+  ["Zlatan Ibrahimović","SE","FW",1981,1,"Malmö FF|X|1999; Ajax|X|2001; Juventus|SA|2004; Inter|SA|2006; Barcelona|LL|2009; Milan|SA|2010; Paris Saint-Germain|L1|2012; Manchester United|PL|2016; LA Galaxy|X|2018; Milan|SA|2020",["Ibra"]],
+  ["Cristiano Ronaldo","PT","FW",1985,1,"Sporting CP|X|2002; Manchester United|PL|2003; Real Madrid|LL|2009; Juventus|SA|2018; Manchester United|PL|2021; Al-Nassr|X|2023",["CR7"]],
+  ["Lionel Messi","AR","FW",1987,1,"Barcelona|LL|2004; Paris Saint-Germain|L1|2021; Inter Miami|X|2023",["Leo Messi"]],
+  ["Andrea Pirlo","IT","MF",1979,1,"Brescia|SA|1995; Inter|SA|1998; Reggina|SA|1999; Brescia|SA|2001; Milan|SA|2001; Juventus|SA|2011; New York City FC|X|2015",[]],
+  ["Thierry Henry","FR","FW",1977,1,"Monaco|L1|1994; Juventus|SA|1999; Arsenal|PL|1999; Barcelona|LL|2007; New York Red Bulls|X|2010; Arsenal|PL|2012",[]],
+  ["Kaká","BR","MF",1982,1,"São Paulo|X|2001; Milan|SA|2003; Real Madrid|LL|2009; Milan|SA|2013; São Paulo|X|2014; Orlando City|X|2015",["Ricardo Kaka"]],
+  ["Robert Lewandowski","PL","FW",1988,1,"Znicz Pruszków|X|2006; Lech Poznań|X|2008; Borussia Dortmund|BL|2010; Bayern Monaco|BL|2014; Barcelona|LL|2022",["Lewa"]],
+  ["Karim Benzema","FR","FW",1987,1,"Lyon|L1|2004; Real Madrid|LL|2009; Al-Ittihad|X|2023",[]],
+  ["Luka Modrić","HR","MF",1985,1,"Dinamo Zagabria|X|2003; Tottenham|PL|2008; Real Madrid|LL|2012; Milan|SA|2025",[]],
+  ["Gonzalo Higuaín","AR","FW",1987,2,"River Plate|X|2005; Real Madrid|LL|2007; Napoli|SA|2013; Juventus|SA|2016; Milan|SA|2018; Chelsea|PL|2019; Juventus|SA|2019; Inter Miami|X|2020",["Pipita"]],
+  ["Edin Džeko","BA","FW",1986,2,"Željezničar|X|2003; Teplice|X|2005; Wolfsburg|BL|2007; Manchester City|PL|2011; Roma|SA|2015; Inter|SA|2021; Fenerbahçe|X|2023; Fiorentina|SA|2025",[]],
+  ["Ángel Di María","AR","MF",1988,1,"Rosario Central|X|2005; Benfica|X|2007; Real Madrid|LL|2010; Manchester United|PL|2014; Paris Saint-Germain|L1|2015; Juventus|SA|2022; Benfica|X|2023; Rosario Central|X|2025",["Fideo"]],
+  ["Romelu Lukaku","BE","FW",1993,1,"Anderlecht|X|2009; Chelsea|PL|2011; West Bromwich|PL|2012; Everton|PL|2013; Manchester United|PL|2017; Inter|SA|2019; Chelsea|PL|2021; Inter|SA|2022; Roma|SA|2023; Napoli|SA|2024",["Big Rom"]],
+  ["Mario Balotelli","IT","FW",1990,2,"Lumezzane|X|2005; Inter|SA|2007; Manchester City|PL|2010; Milan|SA|2013; Liverpool|PL|2014; Milan|SA|2015; Nizza|L1|2016; Marsiglia|L1|2019; Brescia|SA|2019; Monza|X|2020; Adana Demirspor|X|2021; Sion|X|2022; Genoa|SA|2024",["Super Mario"]],
+  ["Fernando Torres","ES","FW",1984,1,"Atlético Madrid|LL|2001; Liverpool|PL|2007; Chelsea|PL|2011; Milan|SA|2014; Atlético Madrid|LL|2015; Sagan Tosu|X|2018",["El Niño"]],
+  ["Antoine Griezmann","FR","FW",1991,1,"Real Sociedad|LL|2009; Atlético Madrid|LL|2014; Barcelona|LL|2019; Atlético Madrid|LL|2021",[]],
+  ["Paul Pogba","FR","MF",1993,1,"Manchester United|PL|2011; Juventus|SA|2012; Manchester United|PL|2016; Juventus|SA|2022; Monaco|L1|2025",[]],
+  ["Arturo Vidal","CL","MF",1987,2,"Colo-Colo|X|2005; Bayer Leverkusen|BL|2007; Juventus|SA|2011; Bayern Monaco|BL|2015; Barcelona|LL|2018; Inter|SA|2020; Flamengo|X|2022; Athletico Paranaense|X|2023; Colo-Colo|X|2024",["King Arturo"]],
+  ["Miroslav Klose","DE","FW",1978,2,"Kaiserslautern|BL|1999; Werder Brema|BL|2004; Bayern Monaco|BL|2007; Lazio|SA|2011",[]],
+  ["Sergio Agüero","AR","FW",1988,1,"Independiente|X|2003; Atlético Madrid|LL|2006; Manchester City|PL|2011; Barcelona|LL|2021",["Kun Aguero"]],
+  ["Samuel Eto'o","CM","FW",1981,1,"Real Madrid|LL|1997; Mallorca|LL|2000; Barcelona|LL|2004; Inter|SA|2009; Anzhi|X|2011; Chelsea|PL|2013; Everton|PL|2014; Sampdoria|SA|2015; Antalyaspor|X|2015",["Etoo"]],
+  ["Clarence Seedorf","NL","MF",1976,2,"Ajax|X|1992; Sampdoria|SA|1995; Real Madrid|LL|1996; Inter|SA|1999; Milan|SA|2002; Botafogo|X|2012",[]],
+  ["Patrick Vieira","FR","MF",1976,2,"Cannes|L1|1993; Milan|SA|1995; Arsenal|PL|1996; Juventus|SA|2005; Inter|SA|2006; Manchester City|PL|2010",[]],
+  ["Hernán Crespo","AR","FW",1975,2,"River Plate|X|1993; Parma|SA|1996; Lazio|SA|2000; Inter|SA|2002; Chelsea|PL|2003; Milan|SA|2004; Chelsea|PL|2005; Inter|SA|2006; Genoa|SA|2008; Parma|SA|2009",["Valdanito"]],
+  ["Andriy Shevchenko","UA","FW",1976,1,"Dinamo Kiev|X|1994; Milan|SA|1999; Chelsea|PL|2006; Milan|SA|2008; Dinamo Kiev|X|2009",["Sheva"]],
+  ["David Beckham","ENG","MF",1975,1,"Manchester United|PL|1992; Real Madrid|LL|2003; LA Galaxy|X|2007; Milan|SA|2009; Paris Saint-Germain|L1|2013",[]],
+  ["Ronaldo Nazário","BR","FW",1976,1,"Cruzeiro|X|1993; PSV Eindhoven|X|1994; Barcelona|LL|1996; Inter|SA|1997; Real Madrid|LL|2002; Milan|SA|2007; Corinthians|X|2009",["Ronaldo","Il Fenomeno"]],
+  ["Ronaldinho","BR","FW",1980,1,"Grêmio|X|1998; Paris Saint-Germain|L1|2001; Barcelona|LL|2003; Milan|SA|2008; Flamengo|X|2011; Atlético Mineiro|X|2012; Querétaro|X|2014; Fluminense|X|2015",["Ronaldinho Gaucho"]],
+  ["Wesley Sneijder","NL","MF",1984,2,"Ajax|X|2002; Real Madrid|LL|2007; Inter|SA|2009; Galatasaray|X|2013; Nizza|L1|2017; Al-Gharafa|X|2018",[]],
+  ["Arjen Robben","NL","FW",1984,1,"Groningen|X|2000; PSV Eindhoven|X|2002; Chelsea|PL|2004; Real Madrid|LL|2007; Bayern Monaco|BL|2009; Groningen|X|2020",[]],
+  ["Mohamed Salah","EG","FW",1992,1,"El Mokawloon|X|2010; Basilea|X|2012; Chelsea|PL|2014; Fiorentina|SA|2015; Roma|SA|2015; Liverpool|PL|2017",["Mo Salah"]],
+  ["Kevin De Bruyne","BE","MF",1991,1,"Genk|X|2008; Chelsea|PL|2012; Werder Brema|BL|2012; Wolfsburg|BL|2014; Manchester City|PL|2015; Napoli|SA|2025",["KDB"]],
+  ["Ciro Immobile","IT","FW",1990,2,"Pescara|X|2011; Genoa|SA|2012; Torino|SA|2013; Borussia Dortmund|BL|2014; Siviglia|LL|2015; Torino|SA|2016; Lazio|SA|2016; Beşiktaş|X|2024; Bologna|SA|2025",[]],
+  ["Gianluigi Buffon","IT","GK",1978,1,"Parma|SA|1995; Juventus|SA|2001; Paris Saint-Germain|L1|2018; Juventus|SA|2019; Parma|X|2021",["Gigi Buffon"]],
+  ["Alessandro Nesta","IT","DF",1976,2,"Lazio|SA|1993; Milan|SA|2002; Montreal Impact|X|2012; Chennaiyin|X|2014",[]],
+  ["Fabio Cannavaro","IT","DF",1973,2,"Napoli|SA|1992; Parma|SA|1995; Inter|SA|2002; Juventus|SA|2004; Real Madrid|LL|2006; Juventus|SA|2009; Al-Ahli Dubai|X|2010",[]],
+  ["Leonardo Bonucci","IT","DF",1987,2,"Inter|SA|2005; Treviso|X|2007; Bari|SA|2009; Juventus|SA|2010; Milan|SA|2017; Juventus|SA|2018; Union Berlino|BL|2023; Fenerbahçe|X|2024",[]],
+  ["Dries Mertens","BE","FW",1987,2,"Utrecht|X|2009; PSV Eindhoven|X|2011; Napoli|SA|2013; Galatasaray|X|2022",["Ciro Mertens"]],
+  ["Marek Hamšík","SK","MF",1987,2,"Slovan Bratislava|X|2004; Brescia|X|2004; Napoli|SA|2007; Dalian Pro|X|2019; IFK Göteborg|X|2021; Trabzonspor|X|2021",[]],
+  ["Javier Zanetti","AR","DF",1973,2,"Talleres|X|1992; Banfield|X|1993; Inter|SA|1995",["Pupi"]],
+  ["Diego Milito","AR","FW",1979,2,"Racing Club|X|1999; Genoa|X|2004; Real Saragozza|LL|2005; Genoa|SA|2008; Inter|SA|2009; Racing Club|X|2014",["Principe"]],
+  ["Juan Mata","ES","MF",1988,2,"Valencia|LL|2007; Chelsea|PL|2011; Manchester United|PL|2014; Galatasaray|X|2022; Vissel Kobe|X|2023; Western Sydney|X|2024",[]],
+  ["Cesc Fàbregas","ES","MF",1987,2,"Arsenal|PL|2003; Barcelona|LL|2011; Chelsea|PL|2014; Monaco|L1|2019; Como|X|2022",["Fabregas"]],
+  ["Xabi Alonso","ES","MF",1981,2,"Real Sociedad|LL|1999; Eibar|X|2000; Liverpool|PL|2004; Real Madrid|LL|2009; Bayern Monaco|BL|2014",[]],
+  ["Philippe Coutinho","BR","MF",1992,2,"Vasco da Gama|X|2008; Inter|SA|2010; Espanyol|LL|2012; Liverpool|PL|2013; Barcelona|LL|2018; Bayern Monaco|BL|2019; Aston Villa|PL|2022; Al-Duhail|X|2023; Vasco da Gama|X|2024",[]],
+  ["Jérôme Boateng","DE","DF",1988,2,"Hertha Berlino|BL|2006; Amburgo|BL|2007; Manchester City|PL|2010; Bayern Monaco|BL|2011; Lione|L1|2021; Salernitana|SA|2023; LASK|X|2024",[]],
+  ["Mesut Özil","DE","MF",1988,1,"Schalke 04|BL|2006; Werder Brema|BL|2008; Real Madrid|LL|2010; Arsenal|PL|2013; Fenerbahçe|X|2021; İstanbul Başakşehir|X|2022",["Ozil"]],
+  ["Gareth Bale","WAL","FW",1989,1,"Southampton|X|2006; Tottenham|PL|2007; Real Madrid|LL|2013; Tottenham|PL|2020; Los Angeles FC|X|2022",[]],
+  ["Luis Suárez","UY","FW",1987,1,"Nacional|X|2005; Groningen|X|2006; Ajax|X|2007; Liverpool|PL|2011; Barcelona|LL|2014; Atlético Madrid|LL|2020; Nacional|X|2022; Grêmio|X|2023; Inter Miami|X|2024",["El Pistolero"]],
+  ["Edinson Cavani","UY","FW",1987,1,"Danubio|X|2006; Palermo|SA|2007; Napoli|SA|2010; Paris Saint-Germain|L1|2013; Manchester United|PL|2020; Valencia|LL|2022; Boca Juniors|X|2023",["El Matador"]],
+  ["Paulo Dybala","AR","FW",1993,2,"Instituto|X|2011; Palermo|SA|2012; Juventus|SA|2015; Roma|SA|2022",["La Joya"]],
+  ["Lautaro Martínez","AR","FW",1997,2,"Racing Club|X|2015; Inter|SA|2018",["El Toro"]],
+  ["Victor Osimhen","NG","FW",1998,2,"Wolfsburg|BL|2017; Charleroi|X|2018; Lille|L1|2019; Napoli|SA|2020; Galatasaray|X|2024",[]],
+  ["Khvicha Kvaratskhelia","GE","FW",2001,2,"Dinamo Tbilisi|X|2017; Rustavi|X|2018; Lokomotiv Mosca|X|2019; Rubin Kazan|X|2019; Dinamo Batumi|X|2022; Napoli|SA|2022; Paris Saint-Germain|L1|2025",["Kvara"]],
+  ["Olivier Giroud","FR","FW",1986,2,"Grenoble|X|2005; Tours|X|2008; Montpellier|L1|2010; Arsenal|PL|2012; Chelsea|PL|2018; Milan|SA|2021; Los Angeles FC|X|2024; Lille|L1|2025",[]],
+  ["Rafael Leão","PT","FW",1999,2,"Sporting CP|X|2017; Lille|L1|2018; Milan|SA|2019",["Leao"]],
+  ["Theo Hernández","FR","DF",1997,2,"Alavés|LL|2016; Real Madrid|LL|2017; Real Sociedad|LL|2018; Milan|SA|2019; Al-Hilal|X|2025",[]],
+  ["Kalidou Koulibaly","SN","DF",1991,2,"Metz|X|2010; Genk|X|2012; Napoli|SA|2014; Chelsea|PL|2022; Al-Hilal|X|2023",["KK"]],
+  ["Mauro Icardi","AR","FW",1993,2,"Sampdoria|SA|2012; Inter|SA|2013; Paris Saint-Germain|L1|2019; Galatasaray|X|2022",[]],
+  ["Jorginho","IT","MF",1991,2,"Hellas Verona|SA|2010; Napoli|SA|2014; Chelsea|PL|2018; Arsenal|PL|2023; Flamengo|X|2025",[]],
+  ["Alexis Sánchez","CL","FW",1988,2,"Cobreloa|X|2005; Udinese|SA|2006; Barcelona|LL|2011; Arsenal|PL|2014; Manchester United|PL|2018; Inter|SA|2019; Marsiglia|L1|2022; Inter|SA|2023; Udinese|SA|2024; Siviglia|LL|2025",["Nino Maravilla"]],
+  ["Franck Ribéry","FR","MF",1983,2,"Metz|L1|2004; Galatasaray|X|2005; Marsiglia|L1|2005; Bayern Monaco|BL|2007; Fiorentina|SA|2019; Salernitana|SA|2021",["Ribery"]],
+  ["Antonio Di Natale","IT","FW",1977,3,"Empoli|SA|1996; Udinese|SA|2004",["Totò Di Natale"]],
+  ["Luca Toni","IT","FW",1977,3,"Brescia|SA|2001; Palermo|X|2003; Fiorentina|SA|2005; Bayern Monaco|BL|2007; Roma|SA|2010; Genoa|SA|2010; Juventus|SA|2011; Al-Nasr|X|2012; Fiorentina|SA|2012; Hellas Verona|SA|2013",[]],
+  ["Gervinho","CI","FW",1987,3,"Beveren|X|2005; Le Mans|L1|2007; Lille|L1|2009; Arsenal|PL|2011; Roma|SA|2013; Hebei China Fortune|X|2016; Parma|SA|2018; Trabzonspor|X|2021",[]],
+  ["Christian Vieri","IT","FW",1973,2,"Atalanta|SA|1995; Juventus|SA|1996; Atlético Madrid|LL|1997; Lazio|SA|1998; Inter|SA|1999; Milan|SA|2005; Monaco|L1|2006; Atalanta|SA|2006; Fiorentina|SA|2007; Atalanta|SA|2008",["Bobo Vieri"]],
+  ["Hakan Çalhanoğlu","TR","MF",1994,2,"Karlsruhe|X|2011; Amburgo|BL|2013; Bayer Leverkusen|BL|2014; Milan|SA|2017; Inter|SA|2021",["Calhanoglu"]],
+  ["Erling Haaland","NO","FW",2000,1,"Bryne|X|2016; Molde|X|2017; Red Bull Salisburgo|X|2019; Borussia Dortmund|BL|2020; Manchester City|PL|2022",[]],
+  ["Kylian Mbappé","FR","FW",1998,1,"Monaco|L1|2015; Paris Saint-Germain|L1|2017; Real Madrid|LL|2024",["Mbappe"]],
+  ["Harry Kane","ENG","FW",1993,1,"Tottenham|PL|2011; Leyton Orient|X|2011; Millwall|X|2012; Norwich|X|2013; Leicester|X|2013; Bayern Monaco|BL|2023",[]],
+  ["Neymar","BR","FW",1992,1,"Santos|X|2009; Barcelona|LL|2013; Paris Saint-Germain|L1|2017; Al-Hilal|X|2023; Santos|X|2025",["Neymar Jr"]],
+  ["Diego Godín","UY","DF",1986,3,"Nacional|X|2006; Villarreal|LL|2007; Atlético Madrid|LL|2010; Inter|SA|2019; Cagliari|SA|2020; Atlético Mineiro|X|2021; Vélez Sarsfield|X|2022",[]],
+  ["Miralem Pjanić","BA","MF",1990,2,"Metz|L1|2007; Lione|L1|2008; Roma|SA|2011; Juventus|SA|2016; Barcelona|LL|2020; Beşiktaş|X|2021; Sharjah|X|2022; CSKA Mosca|X|2023",["Pjanic"]],
+  ["Ivan Perišić","HR","FW",1989,2,"Roeselare|X|2009; Club Brugge|X|2009; Borussia Dortmund|BL|2011; Wolfsburg|BL|2013; Inter|SA|2015; Bayern Monaco|BL|2019; Inter|SA|2020; Tottenham|PL|2022; Hajduk Spalato|X|2024; PSV Eindhoven|X|2024",["Perisic"]]
+];
+
+const CLUBS = {};
+const PLAYERS = RAW_PLAYERS.map(([n, nat, pos, b, tier, career, a], id) => ({
+  id, n, nat, pos, b, tier, a,
+  c: career.split(";").map(s => {
+    const [club, lg, year] = s.trim().split("|");
+    return [club, lg, Number(year)];
+  })
+}));
