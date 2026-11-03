@@ -166,7 +166,8 @@
 
   function nextRound() {
     game.idx++;
-    if (game.idx >= game.queue.length) { game.queue = shuffle(game.queue.slice()); game.idx = 0; }
+    // nella sfida 1v1 il rimescolamento usa il generatore col seme comune, così i due restano allineati
+    if (game.idx >= game.queue.length) { game.queue = shuffle(game.queue.slice(), game.rnd); game.idx = 0; }
     const p = game.queue[game.idx];
     const d = game.d;
     Object.assign(game, {
@@ -174,12 +175,14 @@
       clues: p.c.length + (d.infoUpfront ? 0 : INFO_KEYS.length),
       revealed: Math.min(d.startClubs, p.c.length),
       attemptsLeft: d.attempts,
-      wrongs: [], marks: [], roundOver: false, win: false, pts: 0, prevRevealed: 0
+      wrongs: [], marks: [], roundOver: false, win: false, pts: 0, prevRevealed: 0,
+      closed: false, result: null, oppOut: false
     });
     $("#guessInput").value = "";
     $("#suggest").innerHTML = "";
     suggestions = [];
     if (game.mode === "survival") startTimer(d.time);
+    if (game.mode === "duel" && game.oppDone[game.idx]) oppFinished(game.oppDone[game.idx]);
     renderGame();
     setTimeout(() => $("#guessInput").focus(), 50);
   }
@@ -211,8 +214,11 @@
       game.pts = game.attemptsLeft * game.d.mult * 10;
       game.score += game.pts; game.solved++;
     }
-    if (game.mode === "duel") send({ t: "score", score: game.score, solved: game.solved });
-    else if (game.mode === "survival") {
+    if (game.mode === "duel") {
+      send({ t: win ? "solved" : "out", idx: game.idx, score: game.score, solved: game.solved });
+      if (win) closeRound("me");
+      else if (game.oppOut || game.oppGone) closeRound("none");
+    } else if (game.mode === "survival") {
       if (!win) game.lives--;
       if (game.lives <= 0) { stats.bestSurvival = Math.max(stats.bestSurvival, game.solved); saveStats(); }
     } else {
@@ -288,7 +294,7 @@
     const g = game, panel = $("#endPanel");
     panel.hidden = !g.roundOver;
     if (!g.roundOver) return;
-    if (g.mode === "duel" && g.over) { renderDuelEnd(panel); return; }
+    if (g.mode === "duel") { if (g.over) renderDuelEnd(panel); else renderDuelRound(panel); return; }
     panel.className = "end-panel " + (g.win ? "win" : "lose");
     const title = g.win ? `${t("correct")} +${g.pts}` : g.reason === "timeout" ? t("timeout") : t("wrong");
     let sub = "";
@@ -297,7 +303,7 @@
     if (g.mode === "daily") sub = t("dailyNext");
 
     const buttons = [];
-    if ((g.mode === "survival" && !survivalOver) || g.mode === "duel") buttons.push(["next", "primary", nextRound]);
+    if (g.mode === "survival" && !survivalOver) buttons.push(["next", "primary", nextRound]);
     else {
       if (g.mode !== "daily") buttons.push(["playAgain", "primary", () => startGame(g.mode)]);
       buttons.push(["share", g.mode === "daily" ? "primary" : "", share]);
@@ -338,11 +344,13 @@
   // ---------- SFIDA 1v1 ----------
   // Collegamento diretto tra i due browser con PeerJS (WebRTC): il server pubblico di PeerJS serve solo a farli trovare.
   // L'host apre un peer con id ROOM_PREFIX + codice, e il codice è nuovo a ogni stanza.
-  // All'avvio l'host manda seme, filtri e durata: i due ricostruiscono la stessa sequenza di carriere e giocano ognuno al suo ritmo,
-  // mandandosi il punteggio a fine di ogni giocatore.
+  // All'avvio l'host manda seme, filtri e durata: i due ricostruiscono la stessa sequenza di carriere.
+  // Il giocatore da indovinare è lo stesso per entrambi: chi lo indovina per primo prende i punti e dopo ADVANCE_MS
+  // si passa tutti e due al successivo; chi sbaglia o si arrende aspetta l'altro. Ogni messaggio porta l'indice del giocatore.
   const PEERJS_URL = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
   const ROOM_PREFIX = "careerkick-duel-";
   const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // niente 0/O e 1/I/L, che si confondono
+  const ADVANCE_MS = 2500; // quanto resta visibile la risposta prima del giocatore successivo
   let duel = null; // { host, code, cfg, peer, conn, rematchAsked, oppWantsRematch }
   let duelTimerId = null, countdownId = null, peerjsLoading = null;
 
@@ -419,7 +427,11 @@
     conn.on("data", (msg) => { if (duel === d) onDuelMessage(msg); });
     conn.on("close", () => {
       if (duel !== d) return;
-      if (game && game.mode === "duel") { game.oppGone = true; toast(t("opponentLeft")); if (game.over) renderGame(); }
+      if (game && game.mode === "duel") {
+        game.oppGone = true; toast(t("opponentLeft"));
+        if (!game.over && game.roundOver && !game.closed) closeRound("none"); // stavo aspettando lui
+        renderGame();
+      }
       else duelFail("opponentLeft");
     });
   }
@@ -434,6 +446,11 @@
     else if (msg.t === "score" && game && game.mode === "duel") {
       game.opp = msg.score; game.oppSolved = msg.solved;
       if (game.over) renderGame(); else renderHud();
+    } else if ((msg.t === "solved" || msg.t === "out") && game && game.mode === "duel" && !game.over) {
+      game.opp = msg.score; game.oppSolved = msg.solved;
+      // può arrivare prima che io sia passato a quel giocatore: lo si applica quando ci arrivo
+      if (msg.idx > game.idx) game.oppDone[msg.idx] = msg.t;
+      if (msg.idx === game.idx && oppFinished(msg.t)) renderGame(); else renderHud();
     } else if (msg.t === "rematch" && duel.host) {
       duel.oppWantsRematch = true; toast(t("rematchOffer"));
       if (game && game.over) renderGame();
@@ -460,9 +477,10 @@
   }
 
   function startDuelGame({ seed, cfg }) {
+    const rnd = mulberry32(seed);
     game = {
-      mode: "duel", diffKey: cfg.diff, d: DIFF[cfg.diff], queue: shuffle(buildPool(cfg.diff, false, cfg), mulberry32(seed)),
-      idx: -1, score: 0, solved: 0, opp: 0, oppSolved: 0, endAt: Date.now() + cfg.dur * 1000, timeLeft: cfg.dur, over: false
+      mode: "duel", diffKey: cfg.diff, d: DIFF[cfg.diff], rnd, queue: shuffle(buildPool(cfg.diff, false, cfg), rnd),
+      idx: -1, score: 0, solved: 0, opp: 0, oppSolved: 0, oppDone: {}, endAt: Date.now() + cfg.dur * 1000, timeLeft: cfg.dur, over: false
     };
     show("game");
     nextRound();
@@ -474,8 +492,44 @@
     if (left !== game.timeLeft) { game.timeLeft = left; renderHud(); }
     if (left <= 0) finishDuel();
   }
+  // il giocatore è chiuso quando qualcuno l'ha indovinato o quando nessuno dei due ha più tentativi
+  // result: "me" | "opp" | "both" (indovinato da tutti e due quasi insieme) | "none"
+  function closeRound(result) {
+    game.closed = true; game.result = result;
+    clearTimeout(game.advanceId);
+    const g = game;
+    g.advanceId = setTimeout(() => { if (game === g && !g.over) nextRound(); }, ADVANCE_MS);
+  }
+  // l'avversario ha finito il giocatore corrente; true se cambia quello che si vede
+  function oppFinished(kind) {
+    const g = game;
+    if (kind === "solved") {
+      if (g.closed) { if (g.result === "me") { g.result = "both"; return true; } return false; }
+      if (!g.roundOver) { g.roundOver = true; g.win = false; stopTimer(); $("#suggest").innerHTML = ""; suggestions = []; }
+      closeRound("opp");
+      return true;
+    }
+    g.oppOut = true;
+    if (!g.roundOver || g.closed) return false; // io sto ancora giocando
+    closeRound("none");
+    return true;
+  }
+
+  function renderDuelRound(panel) {
+    const g = game;
+    const won = g.result === "me" || g.result === "both";
+    panel.className = "end-panel " + (won ? "win" : "lose");
+    // finché l'avversario gioca non si mostra la risposta
+    const title = !g.closed ? t("wrong") : won ? `${t("correct")} +${g.pts}` : t(g.result === "opp" ? "oppSolved" : "nobodySolved");
+    const sub = !g.closed ? t("waitingOpponent") : g.result === "both" ? t("bothSolved") : t("nextPlayer");
+    panel.innerHTML = `<div class="end-title">${esc(title)}</div>
+      ${g.closed ? `<div class="end-name">${esc(t("answer", { name: g.target.n }))}</div>` : ""}
+      <div class="end-sub">${esc(sub)}</div>`;
+  }
+
   function finishDuel() {
     clearInterval(duelTimerId); duelTimerId = null;
+    clearTimeout(game.advanceId);
     game.over = true; game.roundOver = true;
     send({ t: "score", score: game.score, solved: game.solved });
     $("#suggest").innerHTML = ""; suggestions = [];

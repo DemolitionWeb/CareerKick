@@ -22,7 +22,7 @@ Prende da Wikidata (i dati strutturati dietro gli infobox di Wikipedia, licenza 
 - L'import richiede circa 10 minuti; ultimo risultato: ~4650 giocatori, ~3200 club.
 - **Filtro campionati**: Tutti / Singolo (ha giocato in quel campionato) / Multi (ha giocato in *tutti* i campionati scelti).
 - **Modalità**: Partita singola, Sfida del giorno (stesso giocatore per tutti), Sopravvivenza (3 vite + timer), Sfida 1v1 online.
-- **Sfida 1v1**: chi crea la stanza riceve un codice di 6 caratteri, nuovo ogni volta, e sceglie la durata (2/3/5 minuti); l'altro entra col codice o col link `?duel=CODICE`. Stessa sequenza di giocatori per entrambi, vince chi ha più punti allo scadere. Collegamento diretto tra i browser con [PeerJS](https://peerjs.com) (WebRTC), caricato solo quando serve: niente server né account da gestire, ma su alcune reti mobili o aziendali la connessione può non riuscire.
+- **Sfida 1v1**: chi crea la stanza riceve un codice di 6 caratteri, nuovo ogni volta, e sceglie la durata (2/3/5 minuti); l'altro entra col codice o col link `?duel=CODICE`. Stesso giocatore per entrambi: chi lo indovina per primo prende i punti e si passa tutti e due al successivo (chi sbaglia o si arrende aspetta l'altro); vince chi ha più punti allo scadere. Collegamento diretto tra i browser con [PeerJS](https://peerjs.com) (WebRTC), caricato solo quando serve: niente server né account da gestire, ma su alcune reti mobili o aziendali la connessione può non riuscire.
 - Statistiche locali, condivisione del risultato, PWA installabile.
 
 ## Avvio in locale

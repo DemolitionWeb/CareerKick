@@ -31,7 +31,7 @@ const I18N = {
     streak: "Serie attuale", bestStreak: "Serie migliore", bestSurvival: "Record sopravvivenza", close: "Chiudi",
     modeDuel: "Sfida 1v1", modeDuelDesc: "Contro un amico online: chi fa più punti nel tempo limite?",
     createRoom: "Crea stanza", joinRoom: "Entra in una stanza", join: "Entra", duration: "Durata",
-    duelIntro: "Difficoltà e campionati sono quelli scelti da chi crea la stanza. Stessi giocatori per tutti e due.",
+    duelIntro: "Difficoltà e campionati sono quelli scelti da chi crea la stanza. Stesso giocatore per tutti e due: chi lo indovina per primo prende i punti e si passa al successivo.",
     roomCode: "Codice stanza", roomCodePh: "CODICE", cancel: "Annulla",
     connecting: "Connessione…", waitingOpponent: "In attesa dell'avversario…", startsIn: "Si parte tra {n}…",
     roomNotFound: "Stanza non trovata", connFailed: "Connessione non riuscita, riprova",
@@ -39,6 +39,7 @@ const I18N = {
     duelInvite: "Sfidami su CareerKick! Codice stanza: {code}",
     you: "Tu", opponent: "Avversario", youWin: "Hai vinto!", youLose: "Hai perso", draw: "Pareggio",
     rematch: "Rivincita", rematchAsked: "Rivincita chiesta…", rematchOffer: "L'avversario vuole la rivincita",
+    oppSolved: "L'avversario l'ha indovinato", nobodySolved: "Nessuno l'ha indovinato", bothSolved: "Indovinato da tutti e due!", nextPlayer: "Prossimo giocatore…",
     GK: "Portiere", DF: "Difensore", MF: "Centrocampista", FW: "Attaccante"
   },
   en: {
@@ -72,7 +73,7 @@ const I18N = {
     streak: "Current streak", bestStreak: "Best streak", bestSurvival: "Survival record", close: "Close",
     modeDuel: "1v1 challenge", modeDuelDesc: "Against a friend online: who scores more before time runs out?",
     createRoom: "Create room", joinRoom: "Join a room", join: "Join", duration: "Duration",
-    duelIntro: "Difficulty and leagues are the ones chosen by whoever creates the room. Both get the same players.",
+    duelIntro: "Difficulty and leagues are the ones chosen by whoever creates the room. Same player for both: whoever guesses first scores and you both move on.",
     roomCode: "Room code", roomCodePh: "CODE", cancel: "Cancel",
     connecting: "Connecting…", waitingOpponent: "Waiting for your opponent…", startsIn: "Starting in {n}…",
     roomNotFound: "Room not found", connFailed: "Connection failed, try again",
@@ -80,6 +81,7 @@ const I18N = {
     duelInvite: "Challenge me on CareerKick! Room code: {code}",
     you: "You", opponent: "Opponent", youWin: "You win!", youLose: "You lose", draw: "Draw",
     rematch: "Rematch", rematchAsked: "Rematch requested…", rematchOffer: "Your opponent wants a rematch",
+    oppSolved: "Your opponent got it", nobodySolved: "Nobody got it", bothSolved: "You both got it!", nextPlayer: "Next player…",
     GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward"
   },
   es: {
@@ -113,7 +115,7 @@ const I18N = {
     streak: "Racha actual", bestStreak: "Mejor racha", bestSurvival: "Récord supervivencia", close: "Cerrar",
     modeDuel: "Duelo 1v1", modeDuelDesc: "Contra un amigo online: ¿quién suma más antes de que acabe el tiempo?",
     createRoom: "Crear sala", joinRoom: "Unirse a una sala", join: "Entrar", duration: "Duración",
-    duelIntro: "La dificultad y las ligas las elige quien crea la sala. Los mismos jugadores para los dos.",
+    duelIntro: "La dificultad y las ligas las elige quien crea la sala. El mismo jugador para los dos: quien lo adivina primero suma los puntos y se pasa al siguiente.",
     roomCode: "Código de sala", roomCodePh: "CÓDIGO", cancel: "Cancelar",
     connecting: "Conectando…", waitingOpponent: "Esperando al rival…", startsIn: "Empieza en {n}…",
     roomNotFound: "Sala no encontrada", connFailed: "No se pudo conectar, inténtalo de nuevo",
@@ -121,6 +123,7 @@ const I18N = {
     duelInvite: "¡Rétame en CareerKick! Código de sala: {code}",
     you: "Tú", opponent: "Rival", youWin: "¡Has ganado!", youLose: "Has perdido", draw: "Empate",
     rematch: "Revancha", rematchAsked: "Revancha pedida…", rematchOffer: "Tu rival quiere la revancha",
+    oppSolved: "Tu rival lo ha adivinado", nobodySolved: "Nadie lo ha adivinado", bothSolved: "¡Lo habéis adivinado los dos!", nextPlayer: "Siguiente jugador…",
     GK: "Portero", DF: "Defensa", MF: "Centrocampista", FW: "Delantero"
   },
   fr: {
@@ -154,7 +157,7 @@ const I18N = {
     streak: "Série actuelle", bestStreak: "Meilleure série", bestSurvival: "Record survie", close: "Fermer",
     modeDuel: "Duel 1v1", modeDuelDesc: "Contre un ami en ligne : qui marque le plus avant la fin du temps ?",
     createRoom: "Créer un salon", joinRoom: "Rejoindre un salon", join: "Rejoindre", duration: "Durée",
-    duelIntro: "La difficulté et les championnats sont ceux choisis par le créateur du salon. Les mêmes joueurs pour les deux.",
+    duelIntro: "La difficulté et les championnats sont ceux choisis par le créateur du salon. Le même joueur pour les deux : le premier qui le trouve marque les points et on passe au suivant.",
     roomCode: "Code du salon", roomCodePh: "CODE", cancel: "Annuler",
     connecting: "Connexion…", waitingOpponent: "En attente de l'adversaire…", startsIn: "Début dans {n}…",
     roomNotFound: "Salon introuvable", connFailed: "Connexion impossible, réessaie",
@@ -162,6 +165,7 @@ const I18N = {
     duelInvite: "Défie-moi sur CareerKick ! Code du salon : {code}",
     you: "Toi", opponent: "Adversaire", youWin: "Tu as gagné !", youLose: "Tu as perdu", draw: "Égalité",
     rematch: "Revanche", rematchAsked: "Revanche demandée…", rematchOffer: "Ton adversaire veut une revanche",
+    oppSolved: "Ton adversaire l'a trouvé", nobodySolved: "Personne ne l'a trouvé", bothSolved: "Vous l'avez trouvé tous les deux !", nextPlayer: "Joueur suivant…",
     GK: "Gardien", DF: "Défenseur", MF: "Milieu", FW: "Attaquant"
   },
   de: {
@@ -195,7 +199,7 @@ const I18N = {
     streak: "Aktuelle Serie", bestStreak: "Beste Serie", bestSurvival: "Überlebensrekord", close: "Schließen",
     modeDuel: "1v1-Duell", modeDuelDesc: "Gegen einen Freund online: wer holt mehr Punkte, bevor die Zeit abläuft?",
     createRoom: "Raum erstellen", joinRoom: "Raum beitreten", join: "Beitreten", duration: "Dauer",
-    duelIntro: "Schwierigkeit und Ligen legt fest, wer den Raum erstellt. Beide bekommen dieselben Spieler.",
+    duelIntro: "Schwierigkeit und Ligen legt fest, wer den Raum erstellt. Derselbe Spieler für beide: Wer ihn zuerst errät, bekommt die Punkte, dann geht es weiter.",
     roomCode: "Raumcode", roomCodePh: "CODE", cancel: "Abbrechen",
     connecting: "Verbinde…", waitingOpponent: "Warte auf den Gegner…", startsIn: "Start in {n}…",
     roomNotFound: "Raum nicht gefunden", connFailed: "Verbindung fehlgeschlagen, versuch es nochmal",
@@ -203,6 +207,7 @@ const I18N = {
     duelInvite: "Fordere mich bei CareerKick heraus! Raumcode: {code}",
     you: "Du", opponent: "Gegner", youWin: "Du hast gewonnen!", youLose: "Du hast verloren", draw: "Unentschieden",
     rematch: "Revanche", rematchAsked: "Revanche angefragt…", rematchOffer: "Dein Gegner will eine Revanche",
+    oppSolved: "Dein Gegner hat ihn erraten", nobodySolved: "Keiner hat ihn erraten", bothSolved: "Ihr habt ihn beide erraten!", nextPlayer: "Nächster Spieler…",
     GK: "Torwart", DF: "Verteidiger", MF: "Mittelfeldspieler", FW: "Stürmer"
   },
   pt: {
@@ -236,7 +241,7 @@ const I18N = {
     streak: "Sequência atual", bestStreak: "Melhor sequência", bestSurvival: "Recorde sobrevivência", close: "Fechar",
     modeDuel: "Duelo 1v1", modeDuelDesc: "Contra um amigo online: quem faz mais pontos antes do tempo acabar?",
     createRoom: "Criar sala", joinRoom: "Entrar numa sala", join: "Entrar", duration: "Duração",
-    duelIntro: "A dificuldade e os campeonatos são escolhidos por quem cria a sala. Os mesmos jogadores para os dois.",
+    duelIntro: "A dificuldade e os campeonatos são escolhidos por quem cria a sala. O mesmo jogador para os dois: quem acertar primeiro fica com os pontos e passa-se ao seguinte.",
     roomCode: "Código da sala", roomCodePh: "CÓDIGO", cancel: "Cancelar",
     connecting: "A ligar…", waitingOpponent: "À espera do adversário…", startsIn: "Começa em {n}…",
     roomNotFound: "Sala não encontrada", connFailed: "Não foi possível ligar, tenta de novo",
@@ -244,6 +249,7 @@ const I18N = {
     duelInvite: "Desafia-me no CareerKick! Código da sala: {code}",
     you: "Tu", opponent: "Adversário", youWin: "Ganhaste!", youLose: "Perdeste", draw: "Empate",
     rematch: "Desforra", rematchAsked: "Desforra pedida…", rematchOffer: "O adversário quer a desforra",
+    oppSolved: "O adversário acertou", nobodySolved: "Ninguém acertou", bothSolved: "Acertaram os dois!", nextPlayer: "Próximo jogador…",
     GK: "Guarda-redes", DF: "Defesa", MF: "Médio", FW: "Avançado"
   }
 };
