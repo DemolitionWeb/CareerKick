@@ -23,7 +23,7 @@
 
   const detectLang = () => { const l = (navigator.language || "en").slice(0, 2); return I18N[l] ? l : "en"; };
   const settings = Object.assign(
-    { lang: detectLang(), difficulty: "medium", leagueMode: "all", single: "SA", multi: ["SA", "PL"] },
+    { lang: detectLang(), difficulty: "medium", leagueMode: "all", single: "SA", multi: ["SA", "PL"], duelDur: 180 },
     store.get("settings", {})
   );
   const stats = Object.assign({ played: 0, wins: 0, streak: 0, bestStreak: 0, bestSurvival: 0 }, store.get("stats", {}));
@@ -77,14 +77,15 @@
   function todayKey() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 
   // ---------- pool ----------
-  function leagueOk(p) {
+  // cfg: i filtri dei campionati; nella sfida 1v1 sono quelli dell'host, non quelli salvati su questo dispositivo
+  function leagueOk(p, cfg) {
     const played = new Set(p.c.map((c) => c[1]));
-    if (settings.leagueMode === "single") return played.has(settings.single);
-    if (settings.leagueMode === "multi") return settings.multi.length >= 2 && settings.multi.every((l) => played.has(l));
+    if (cfg.leagueMode === "single") return played.has(cfg.single);
+    if (cfg.leagueMode === "multi") return cfg.multi.length >= 2 && cfg.multi.every((l) => played.has(l));
     return true;
   }
-  function buildPool(diffKey, ignoreLeagues) {
-    return PLAYERS.filter((p) => p.tier <= DIFF[diffKey].tiers && (ignoreLeagues || leagueOk(p)));
+  function buildPool(diffKey, ignoreLeagues, cfg = settings) {
+    return PLAYERS.filter((p) => p.tier <= DIFF[diffKey].tiers && (ignoreLeagues || leagueOk(p, cfg)));
   }
 
   // ---------- UI helpers ----------
@@ -103,6 +104,7 @@
     document.documentElement.lang = settings.lang;
     document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
     $("#guessInput").placeholder = t("guessPh");
+    $("#roomInput").placeholder = t("roomCodePh");
   }
 
   // ---------- HOME ----------
@@ -209,7 +211,8 @@
       game.pts = game.attemptsLeft * game.d.mult * 10;
       game.score += game.pts; game.solved++;
     }
-    if (game.mode === "survival") {
+    if (game.mode === "duel") send({ t: "score", score: game.score, solved: game.solved });
+    else if (game.mode === "survival") {
       if (!win) game.lives--;
       if (game.lives <= 0) { stats.bestSurvival = Math.max(stats.bestSurvival, game.solved); saveStats(); }
     } else {
@@ -239,7 +242,12 @@
       if (!g.roundOver) pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">⏱ ${g.timeLeft}s</span>`);
       pills.push(`<span class="pill">✅ ${g.solved}</span>`);
     }
-    pills.push(`<span class="pill">${esc(t("points"))}: ${g.score}</span>`);
+    if (g.mode === "duel") {
+      const m = Math.floor(g.timeLeft / 60), s = String(g.timeLeft % 60).padStart(2, "0");
+      pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">⏱ ${m}:${s}</span>`);
+      pills.push(`<span class="pill me">${esc(t("you"))}: ${g.score}</span>`);
+      pills.push(`<span class="pill">${esc(t("opponent"))}: ${g.opp}</span>`);
+    } else pills.push(`<span class="pill">${esc(t("points"))}: ${g.score}</span>`);
     $("#hud").innerHTML = pills.join("");
   }
 
@@ -280,6 +288,7 @@
     const g = game, panel = $("#endPanel");
     panel.hidden = !g.roundOver;
     if (!g.roundOver) return;
+    if (g.mode === "duel" && g.over) { renderDuelEnd(panel); return; }
     panel.className = "end-panel " + (g.win ? "win" : "lose");
     const title = g.win ? `${t("correct")} +${g.pts}` : g.reason === "timeout" ? t("timeout") : t("wrong");
     let sub = "";
@@ -288,7 +297,7 @@
     if (g.mode === "daily") sub = t("dailyNext");
 
     const buttons = [];
-    if (g.mode === "survival" && !survivalOver) buttons.push(["next", "primary", nextRound]);
+    if ((g.mode === "survival" && !survivalOver) || g.mode === "duel") buttons.push(["next", "primary", nextRound]);
     else {
       if (g.mode !== "daily") buttons.push(["playAgain", "primary", () => startGame(g.mode)]);
       buttons.push(["share", g.mode === "daily" ? "primary" : "", share]);
@@ -298,10 +307,13 @@
       <div class="end-name">${esc(t("answer", { name: g.target.n }))}</div>
       ${sub ? `<div class="end-sub">${esc(sub)}</div>` : ""}
       <div class="end-actions"></div>`;
+    addButtons(panel, buttons);
+  }
+  function addButtons(panel, buttons) {
     const box = panel.querySelector(".end-actions");
-    buttons.forEach(([key, cls, fn]) => {
+    buttons.forEach(([key, cls, fn, disabled]) => {
       const b = document.createElement("button");
-      b.className = "btn " + cls; b.textContent = t(key); b.onclick = fn;
+      b.className = "btn " + cls; b.textContent = t(key); b.onclick = fn; b.disabled = !!disabled;
       box.appendChild(b);
     });
   }
@@ -321,7 +333,194 @@
     else toast(text);
   }
 
-  function goHome() { stopTimer(); game = null; show("home"); renderHome(); }
+  function goHome() { stopTimer(); leaveDuel(); game = null; show("home"); renderHome(); }
+
+  // ---------- SFIDA 1v1 ----------
+  // Collegamento diretto tra i due browser con PeerJS (WebRTC): il server pubblico di PeerJS serve solo a farli trovare.
+  // L'host apre un peer con id ROOM_PREFIX + codice, e il codice è nuovo a ogni stanza.
+  // All'avvio l'host manda seme, filtri e durata: i due ricostruiscono la stessa sequenza di carriere e giocano ognuno al suo ritmo,
+  // mandandosi il punteggio a fine di ogni giocatore.
+  const PEERJS_URL = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
+  const ROOM_PREFIX = "careerkick-duel-";
+  const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // niente 0/O e 1/I/L, che si confondono
+  let duel = null; // { host, code, cfg, peer, conn, rematchAsked, oppWantsRematch }
+  let duelTimerId = null, countdownId = null, peerjsLoading = null;
+
+  // PeerJS si scarica solo quando serve: il resto dell'app resta leggero e funziona offline
+  function loadPeerJS() {
+    if (window.Peer) return Promise.resolve();
+    peerjsLoading = peerjsLoading || new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = PEERJS_URL; s.onload = resolve;
+      s.onerror = () => { peerjsLoading = null; s.remove(); reject(new Error("peerjs")); };
+      document.head.appendChild(s);
+    });
+    return peerjsLoading;
+  }
+  const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+  const send = (msg) => { if (duel && duel.conn && duel.conn.open) duel.conn.send(msg); };
+
+  function openLobby(code) {
+    leaveDuel(); stopTimer(); game = null;
+    show("duel");
+    $("#lobby").hidden = false; $("#roomWait").hidden = true;
+    $("#roomInput").value = code || "";
+    document.querySelectorAll("#durSeg button").forEach((b) => b.classList.toggle("on", Number(b.dataset.dur) === settings.duelDur));
+    if (code) joinRoom(code);
+  }
+  function showWait(status) {
+    show("duel");
+    $("#lobby").hidden = true; $("#roomWait").hidden = false;
+    $("#roomCode").textContent = duel.code;
+    $("#roomStatus").textContent = status;
+    $("#btnInvite").hidden = !duel.host;
+  }
+
+  async function createRoom() {
+    if (settings.leagueMode === "multi" && settings.multi.length < 2) { toast(t("multiNeedTwo")); return; }
+    if (!buildPool(settings.difficulty).length) { toast(t("poolEmpty")); return; }
+    leaveDuel();
+    const { difficulty, leagueMode, single, multi, duelDur } = settings;
+    const d = duel = { host: true, code: newCode(), cfg: { diff: difficulty, leagueMode, single, multi, dur: duelDur } };
+    showWait(t("connecting"));
+    try { await loadPeerJS(); } catch (e) { duelFail("connFailed"); return; }
+    if (duel !== d) return;
+    d.peer = new Peer(ROOM_PREFIX + d.code);
+    d.peer.on("open", () => { if (duel === d && !d.conn) $("#roomStatus").textContent = t("waitingOpponent"); });
+    d.peer.on("connection", (conn) => {
+      if (d.conn) { conn.on("open", () => conn.close()); return; } // stanza già piena
+      bindConn(d, conn);
+    });
+    d.peer.on("error", (err) => {
+      if (duel !== d) return;
+      if (err.type === "unavailable-id") createRoom(); // codice già in uso: se ne genera un altro
+      else if (!d.conn) duelFail("connFailed");
+    });
+  }
+
+  async function joinRoom(raw) {
+    const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (code.length !== 6) { toast(t("roomNotFound")); return; }
+    leaveDuel();
+    const d = duel = { host: false, code };
+    showWait(t("connecting"));
+    try { await loadPeerJS(); } catch (e) { duelFail("connFailed"); return; }
+    if (duel !== d) return;
+    d.peer = new Peer();
+    d.peer.on("open", () => { if (duel === d) bindConn(d, d.peer.connect(ROOM_PREFIX + code, { reliable: true })); });
+    d.peer.on("error", (err) => {
+      if (duel === d && !(d.conn && d.conn.open)) duelFail(err.type === "peer-unavailable" ? "roomNotFound" : "connFailed");
+    });
+  }
+
+  function bindConn(d, conn) {
+    d.conn = conn;
+    conn.on("open", () => { if (duel === d && !d.host) send({ t: "hello", n: PLAYERS.length }); });
+    conn.on("data", (msg) => { if (duel === d) onDuelMessage(msg); });
+    conn.on("close", () => {
+      if (duel !== d) return;
+      if (game && game.mode === "duel") { game.oppGone = true; toast(t("opponentLeft")); if (game.over) renderGame(); }
+      else duelFail("opponentLeft");
+    });
+  }
+
+  function onDuelMessage(msg) {
+    if (msg.t === "hello" && duel.host) {
+      // con dataset diversi la sequenza di giocatori non sarebbe la stessa
+      if (msg.n !== PLAYERS.length) { send({ t: "mismatch" }); setTimeout(() => duelFail("dataMismatch"), 500); return; }
+      startMatch();
+    } else if (msg.t === "mismatch") duelFail("dataMismatch");
+    else if (msg.t === "start" && !duel.host) beginCountdown(msg);
+    else if (msg.t === "score" && game && game.mode === "duel") {
+      game.opp = msg.score; game.oppSolved = msg.solved;
+      if (game.over) renderGame(); else renderHud();
+    } else if (msg.t === "rematch" && duel.host) {
+      duel.oppWantsRematch = true; toast(t("rematchOffer"));
+      if (game && game.over) renderGame();
+    }
+  }
+
+  function startMatch() {
+    const msg = { t: "start", seed: Math.floor(Math.random() * 2 ** 32), cfg: duel.cfg };
+    send(msg);
+    beginCountdown(msg);
+  }
+
+  function beginCountdown(msg) {
+    stopTimer(); clearInterval(duelTimerId); clearInterval(countdownId);
+    duel.rematchAsked = duel.oppWantsRematch = false;
+    let n = 3;
+    showWait(t("startsIn", { n }));
+    $("#btnInvite").hidden = true; // l'avversario c'è già
+    countdownId = setInterval(() => {
+      if (--n > 0) { $("#roomStatus").textContent = t("startsIn", { n }); return; }
+      clearInterval(countdownId); countdownId = null;
+      startDuelGame(msg);
+    }, 1000);
+  }
+
+  function startDuelGame({ seed, cfg }) {
+    game = {
+      mode: "duel", diffKey: cfg.diff, d: DIFF[cfg.diff], queue: shuffle(buildPool(cfg.diff, false, cfg), mulberry32(seed)),
+      idx: -1, score: 0, solved: 0, opp: 0, oppSolved: 0, endAt: Date.now() + cfg.dur * 1000, timeLeft: cfg.dur, over: false
+    };
+    show("game");
+    nextRound();
+    duelTimerId = setInterval(tickDuel, 250);
+  }
+  // il tempo si calcola dall'orario di fine, così non si accumulano ritardi se la scheda va in background
+  function tickDuel() {
+    const left = Math.max(0, Math.ceil((game.endAt - Date.now()) / 1000));
+    if (left !== game.timeLeft) { game.timeLeft = left; renderHud(); }
+    if (left <= 0) finishDuel();
+  }
+  function finishDuel() {
+    clearInterval(duelTimerId); duelTimerId = null;
+    game.over = true; game.roundOver = true;
+    send({ t: "score", score: game.score, solved: game.solved });
+    $("#suggest").innerHTML = ""; suggestions = [];
+    renderGame();
+  }
+
+  function renderDuelEnd(panel) {
+    const g = game;
+    const res = g.score > g.opp ? "win" : g.score < g.opp ? "lose" : "draw";
+    panel.className = "end-panel " + (res === "draw" ? "" : res);
+    panel.innerHTML = `<div class="end-title">${esc(t(res === "win" ? "youWin" : res === "lose" ? "youLose" : "draw"))}</div>
+      <div class="duel-score">${g.score} – ${g.opp}</div>
+      <div class="end-sub">${esc(t("you"))} ✅ ${g.solved} · ${esc(t("opponent"))} ✅ ${g.oppSolved}</div>
+      ${g.win ? "" : `<div class="end-name">${esc(t("answer", { name: g.target.n }))}</div>`}
+      ${g.oppGone ? `<div class="end-sub">${esc(t("opponentLeft"))}</div>` : ""}
+      <div class="end-actions"></div>`;
+    const buttons = [];
+    if (!g.oppGone) {
+      // la rivincita la avvia l'host; l'altro giocatore la chiede
+      const rematch = () => {
+        if (duel.host) { startMatch(); return; }
+        send({ t: "rematch" }); duel.rematchAsked = true; renderGame();
+      };
+      const asked = !duel.host && duel.rematchAsked;
+      buttons.push([asked ? "rematchAsked" : "rematch", "primary", rematch, asked]);
+    }
+    buttons.push(["home", "", goHome]);
+    addButtons(panel, buttons);
+  }
+
+  function invite() {
+    const url = location.origin + location.pathname + "?duel=" + duel.code;
+    const text = t("duelInvite", { code: duel.code });
+    if (navigator.share) navigator.share({ text, url }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text + "\n" + url).then(() => toast(t("copied")), () => toast(text));
+    else toast(text);
+  }
+
+  function leaveDuel() {
+    clearInterval(duelTimerId); clearInterval(countdownId); duelTimerId = countdownId = null;
+    if (!duel) return;
+    const d = duel; duel = null; // prima di destroy, così gli eventi di chiusura vengono ignorati
+    try { if (d.peer) d.peer.destroy(); } catch (e) { /* ignora */ }
+  }
+  function duelFail(key) { openLobby(); toast(t(key)); }
 
   // ---------- autocomplete ----------
   let suggestions = [], selIdx = 0;
@@ -379,7 +578,14 @@
 
     $("#diffSeg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; settings.difficulty = b.dataset.diff; saveSettings(); renderHome(); };
     $("#lmSeg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; settings.leagueMode = b.dataset.lm; saveSettings(); renderHome(); };
-    document.querySelectorAll(".mode-card").forEach((b) => (b.onclick = () => startGame(b.dataset.mode)));
+    document.querySelectorAll(".mode-card").forEach((b) => (b.onclick = () => (b.dataset.mode === "duel" ? openLobby() : startGame(b.dataset.mode))));
+
+    $("#durSeg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; settings.duelDur = Number(b.dataset.dur); saveSettings(); openLobby(); };
+    $("#btnCreateRoom").onclick = createRoom;
+    $("#btnJoin").onclick = () => joinRoom($("#roomInput").value);
+    $("#roomInput").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); joinRoom($("#roomInput").value); } };
+    $("#btnInvite").onclick = invite;
+    $("#btnLeaveRoom").onclick = () => openLobby();
 
     $("#btnBack").onclick = goHome;
     $("#btnStats").onclick = openStats;
@@ -403,6 +609,10 @@
 
     applyI18n();
     renderHome();
+
+    // link d'invito ?duel=CODICE: si entra subito nella stanza (e si pulisce l'URL, così ricaricando non si rientra)
+    const invited = new URLSearchParams(location.search).get("duel");
+    if (invited) { history.replaceState(null, "", location.pathname); openLobby(invited); }
 
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       navigator.serviceWorker.register("sw.js").catch(() => { /* l'app funziona anche senza */ });

@@ -137,6 +137,16 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: va
 .end-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .end-actions .btn { flex: 1 1 120px; }
 
+/* SFIDA 1v1 */
+.join-card { margin-top: 12px; }
+.room-input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; outline: none; text-transform: uppercase; letter-spacing: 4px; font-weight: 700; }
+.room-input:focus { border-color: var(--accent); }
+.room-wait { text-align: center; }
+.room-wait small { color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-size: 13px; }
+.room-code { font-size: 44px; font-weight: 800; letter-spacing: 8px; color: var(--accent); font-variant-numeric: tabular-nums; margin: 4px 0; }
+.pill.me { border-color: var(--accent); }
+.duel-score { font-size: 32px; font-weight: 800; margin: 8px 0 2px; font-variant-numeric: tabular-nums; }
+
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
 .sheet-backdrop[hidden] { display: none; }
 .sheet { background: var(--bg-2); width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); animation: up .2s ease; }

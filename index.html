@@ -67,6 +67,43 @@
             <span class="mode-icon">❤️</span>
             <span class="mode-text"><strong data-i18n="modeSurvival"></strong><small data-i18n="modeSurvivalDesc"></small></span>
           </button>
+          <button class="mode-card" data-mode="duel">
+            <span class="mode-icon">⚔️</span>
+            <span class="mode-text"><strong data-i18n="modeDuel"></strong><small data-i18n="modeDuelDesc"></small></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SFIDA 1v1: stanza -->
+      <section id="screen-duel" class="screen">
+        <div id="lobby">
+          <div class="card">
+            <h2 data-i18n="createRoom"></h2>
+            <p class="hint" data-i18n="duelIntro"></p>
+            <h3 data-i18n="duration"></h3>
+            <div class="segmented" id="durSeg">
+              <button data-dur="120">2 min</button>
+              <button data-dur="180">3 min</button>
+              <button data-dur="300">5 min</button>
+            </div>
+            <button class="btn primary block" id="btnCreateRoom" data-i18n="createRoom"></button>
+          </div>
+          <div class="card join-card">
+            <h2 data-i18n="joinRoom"></h2>
+            <div class="guess-row">
+              <input id="roomInput" class="room-input" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false">
+              <button class="btn primary" id="btnJoin" data-i18n="join"></button>
+            </div>
+          </div>
+        </div>
+        <div class="card room-wait" id="roomWait" hidden>
+          <small data-i18n="roomCode"></small>
+          <div class="room-code" id="roomCode"></div>
+          <p class="hint" id="roomStatus"></p>
+          <div class="end-actions">
+            <button class="btn primary" id="btnInvite" data-i18n="share"></button>
+            <button class="btn" id="btnLeaveRoom" data-i18n="cancel"></button>
+          </div>
         </div>
       </section>
 
