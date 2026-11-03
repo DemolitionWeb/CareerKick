@@ -12,6 +12,7 @@
   --bad: #ff6b6b;
   --radius: 14px;
   --SA: #2f7de1; --PL: #8b3fd9; --LL: #e8613c; --BL: #d8343f; --L1: #1fb5a8; --X: #6b7f78;
+  --PT: #2fa84f; --NL: #f2932a; --BE: #e3c02a; --CH: #e85d9a; --GR: #6ab7e6;
 }
 
 * { box-sizing: border-box; }

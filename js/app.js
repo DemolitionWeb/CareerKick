@@ -2,8 +2,11 @@
   "use strict";
 
   const $ = (s) => document.querySelector(s);
-  const LEAGUES = ["SA", "PL", "LL", "BL", "L1"];
-  const LEAGUE_NAMES = { SA: "Serie A", PL: "Premier League", LL: "LaLiga", BL: "Bundesliga", L1: "Ligue 1" };
+  const LEAGUES = ["SA", "PL", "LL", "BL", "L1", "PT", "NL", "BE", "CH", "GR"];
+  const LEAGUE_NAMES = {
+    SA: "Serie A", PL: "Premier League", LL: "LaLiga", BL: "Bundesliga", L1: "Ligue 1",
+    PT: "Primeira Liga", NL: "Eredivisie", BE: "Belgian Pro League", CH: "Swiss Super League", GR: "Super League Greece"
+  };
   const INFO_KEYS = ["nationality", "position", "born"];
 
   // tiers: livello massimo di notorietà incluso; startClubs: club visibili all'inizio (Infinity = carriera completa);
@@ -38,11 +41,14 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const leagueLabel = (lg) => LEAGUE_NAMES[lg] || t("other");
   // il dataset generato da Wikidata usa ID di club con nomi per lingua; quello scritto a mano usa il nome diretto
-  // se il nome nella lingua scelta è lunghissimo (es. traslitterazioni complete) si usa il più corto disponibile
+  // su Wikidata il nome di un club straniero in una lingua è spesso la ragione sociale completa ("Sport Lisboa e Benfica"):
+  // se è molto più lungo di quello inglese, che di solito è il nome d'uso, si usa l'inglese;
+  // se resta lunghissimo (es. traslitterazioni complete) si usa il più corto disponibile
   const clubName = (id) => {
     const c = CLUBS[id];
     if (!c) return id;
-    const name = c[settings.lang] || c.en || Object.values(c)[0];
+    let name = c[settings.lang] || c.en || Object.values(c)[0];
+    if (c.en && name.length - c.en.length >= 6 && name.length >= c.en.length * 1.4) name = c.en;
     if (name.length <= 28) return name;
     return Object.values(c).reduce((a, b) => (b.length < a.length ? b : a), name);
   };

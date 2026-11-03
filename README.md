@@ -15,10 +15,11 @@ Gioco a quiz: indovina il calciatore dal suo percorso in carriera.
 ```
 node scripts/build-players.mjs --min-sitelinks 25 --since 1995
 ```
-Prende da Wikidata (i dati strutturati dietro gli infobox di Wikipedia, licenza CC0) i calciatori passati per Serie A, Premier League, LaLiga, Bundesliga o Ligue 1, con carriera, nazionalità, ruolo, anno di nascita e nomi dei club in 6 lingue.
+Prende da Wikidata (i dati strutturati dietro gli infobox di Wikipedia, licenza CC0) i calciatori passati per Serie A, Premier League, LaLiga, Bundesliga, Ligue 1, Primeira Liga, Eredivisie, Belgian Pro League, Swiss Super League o Super League Greece, con carriera, nazionalità, ruolo, anno di nascita e nomi dei club in 6 lingue.
 - `--min-sitelinks`: notorietà minima (numero di Wikipedia in cui il giocatore ha una pagina). Più basso = più giocatori.
 - `--since`: esclude chi ha chiuso la carriera prima di quell'anno.
-- Il campionato di ogni periodo in un club viene dalle stagioni effettivamente giocate (es. Brescia 1995 = Serie A anche se oggi è altrove). La vecchia First Division inglese conta come Premier League.
+- Il campionato di ogni periodo in un club viene dalle stagioni effettivamente giocate (es. Brescia 1995 = Serie A anche se oggi è altrove). La vecchia First Division inglese conta come Premier League. Per Portogallo, Olanda, Belgio, Svizzera e Grecia Wikidata quasi mai elenca le squadre di ogni stagione: negli anni senza dati vale il campionato attuale del club.
+- I livelli di notorietà (Facile/Media/Difficile) si calcolano sui giocatori dei 5 grandi campionati e valgono con le stesse soglie per gli altri.
 - L'import richiede circa 10 minuti; ultimo risultato: ~4650 giocatori, ~3200 club.
 - **Filtro campionati**: Tutti / Singolo (ha giocato in quel campionato) / Multi (ha giocato in *tutti* i campionati scelti).
 - **Modalità**: Partita singola, Sfida del giorno (stesso giocatore per tutti), Sopravvivenza (3 vite + timer), Sfida 1v1 online.

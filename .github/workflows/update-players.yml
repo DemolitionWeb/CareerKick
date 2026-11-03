@@ -1,5 +1,5 @@
 # Aggiorna i giocatori da Wikidata dopo ogni sessione di calciomercato e ripubblica il sito.
-# Le sessioni dei 5 campionati chiudono a inizio settembre e a inizio febbraio: si aggiorna
+# Le sessioni dei campionati chiudono tra fine agosto e la prima settimana di settembre, e a inizio febbraio: si aggiorna
 # pochi giorni dopo e di nuovo due settimane dopo, perché Wikidata registra i trasferimenti con un po' di ritardo.
 # Si può lanciare anche a mano da GitHub: Actions → Aggiorna giocatori → Run workflow.
 name: Aggiorna giocatori

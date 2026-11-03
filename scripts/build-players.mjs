@@ -24,9 +24,18 @@ const OUT = args.out ?? "js/data.js";
 const ENDPOINT = "https://query.wikidata.org/sparql";
 const UA = "CareerKickDataBuilder/0.1 (dataset builder for a football quiz app)";
 const LANGS = ["it", "en", "es", "fr", "de", "pt"];
-const LEAGUES = { Q15804: "SA", Q9448: "PL", Q324867: "LL", Q82595: "BL", Q13394: "L1" };
+const LEAGUES = {
+  Q15804: "SA", Q9448: "PL", Q324867: "LL", Q82595: "BL", Q13394: "L1",
+  Q182994: "PT", Q167541: "NL", Q216022: "BE", Q202699: "CH", Q235114: "GR"
+};
 // competizioni che contano come lo stesso campionato (la First Division inglese fino al 1991)
 const LEAGUE_ALIASES = { Q754839: "PL" };
+// campionati le cui stagioni su Wikidata quasi mai elencano le squadre (P1923): negli anni senza dati
+// vale il campionato attuale del club, accettando l'errore per chi in quegli anni era retrocesso
+const SPARSE_LEAGUES = new Set(["PT", "NL", "BE", "CH", "GR"]);
+// la notorietà (tier) si misura sui giocatori passati dai 5 grandi campionati,
+// così aggiungere campionati minori non cambia la difficoltà dei giocatori che c'erano già
+const BIG5 = new Set(["SA", "PL", "LL", "BL", "L1"]);
 const NOW = new Date().getFullYear() + new Date().getMonth() / 12;
 const NATIONAL_TEAM = "Q6979593";
 const SPECIAL_NATIONS = { Q21: "ENG", Q25: "WAL", Q22: "SCO", Q26: "NIR" };
@@ -75,13 +84,14 @@ function positionCode(label) {
   return null;
 }
 
-// "Real Madrid Club de Fútbol" → "Real Madrid", "SSC Napoli" → "Napoli", "AS Reggina 1914" → "Reggina"
+// "Real Madrid Club de Fútbol" → "Real Madrid", "SSC Napoli" → "Napoli", "AS Reggina 1914" → "Reggina",
+// "Football Club de Sion" → "Sion", "Fussballclub Basel" → "Basel"
 export function shortName(name) {
   let s = name, prev;
   do {
     prev = s;
     s = s.replace(/\s+(F\.?C\.?|A\.?F\.?C\.?|C\.?F\.?C\.?|C\.?F\.?|S\.?C\.?|Calcio|Club de Fútbol|Fútbol Club|Football Club|Sports? Club|Fotbollförening|S\.?p\.?A\.?|\d{4})$/, "")
-      .replace(/^(F\.?C\.?|A\.?F\.?C\.?|S\.?S\.?C\.?|A\.?C\.?F\.?|A\.?S\.?D\.?|U\.?S\.?|A\.?S\.?|A\.?C\.?|S\.?S\.?|R\.?C\.?D\.?|C\.?F\.?|SV|VfL|VfB|Fußball-Club|Football Club|Associazione Calcio|Associazione Sportiva|Unione Sportiva|Società Sportiva|Società Polisportiva)\s+/, "")
+      .replace(/^(F\.?C\.?|A\.?F\.?C\.?|S\.?S\.?C\.?|A\.?C\.?F\.?|A\.?S\.?D\.?|U\.?S\.?|A\.?S\.?|A\.?C\.?|S\.?S\.?|R\.?C\.?D\.?|C\.?F\.?|SV|VfL|VfB|Fußball-Club|Football Club|Associazione Calcio|Associazione Sportiva|Unione Sportiva|Società Sportiva|Società Polisportiva|Fussball ?[Cc]lub|Futebol Clube|Sportclub)\s+(?:(?:de|do|da)\s+)?/, "")
       .trim();
   } while (s !== prev);
   return s.length >= 3 ? s : name;
@@ -94,7 +104,7 @@ function frac(iso) {
 }
 
 async function main() {
-  // 0) squadre partecipanti a ogni stagione dei 5 campionati
+  // 0) squadre partecipanti a ogni stagione dei campionati
   const seasons = {}; // code -> { years: Set, teams: Map(team -> Set(anno di inizio stagione)), last }
   for (const [leagueQ, code] of [...Object.entries(LEAGUES), ...Object.entries(LEAGUE_ALIASES)]) {
     console.log(`Stagioni ${code} (${leagueQ})…`);
@@ -109,7 +119,7 @@ async function main() {
     }
   }
 
-  // 1) giocatori passati da un club che è oggi in uno dei 5 campionati o che ci ha giocato dal SINCE-20 in poi
+  // 1) giocatori passati da un club che è oggi in uno dei campionati o che ci ha giocato dal SINCE-20 in poi
   const players = new Map(); // qid -> { sl }
   const searchClubs = new Set();
   for (const [leagueQ, code] of Object.entries(LEAGUES)) {
@@ -220,7 +230,7 @@ async function main() {
         if (played?.has(S)) return code;
         if (!L.years.has(S)) { // stagione assente su Wikidata
           if (played?.has(S - 1) && played?.has(S + 1)) return code;
-          if (S > L.last && clubLeague[team] === code) return code;
+          if ((S > L.last || SPARSE_LEAGUES.has(code)) && clubLeague[team] === code) return code;
         }
       }
     }
@@ -244,7 +254,8 @@ async function main() {
     const c = stints.map((s, i) => {
       const next = stints[i + 1]?.a;
       const end = s.b ?? next ?? NOW;
-      const row = [s.team, leagueFor(s.team, s.a, Math.max(end, s.a + 0.1)), Math.floor(s.a),
+      // un periodo con solo l'anno (es. prestito "2013–2013") parte da metà anno: deve durare abbastanza da cadere in una stagione
+      const row = [s.team, leagueFor(s.team, s.a, Math.max(end, s.a + 0.2)), Math.floor(s.a),
         s.b != null ? Math.floor(s.b) : next != null ? Math.floor(next) : null, s.apps, s.goals];
       while (row.length > 3 && row[row.length - 1] == null) row.pop();
       return row;
@@ -255,9 +266,11 @@ async function main() {
       a: [...(p.a || [])].filter((x) => x !== p.n && x.length > 2).slice(0, 6) });
   }
 
-  // notorietà: percentili sui sitelinks (top 20% = tier 1, poi 30% = tier 2, resto tier 3)
-  out.sort((a, b) => b.sl - a.sl);
-  out.forEach((p, i) => { p.tier = i < out.length * 0.2 ? 1 : i < out.length * 0.5 ? 2 : 3; delete p.sl; });
+  // notorietà: percentili sui sitelinks dei giocatori dei 5 grandi campionati (top 20% = tier 1, poi 30% = tier 2,
+  // resto tier 3); le stesse soglie valgono per chi ha giocato solo nei campionati minori
+  const fame = out.filter((p) => p.c.some((x) => BIG5.has(x[1]))).map((p) => p.sl).sort((a, b) => b - a);
+  const cut1 = fame[Math.ceil(fame.length * 0.2)], cut2 = fame[Math.ceil(fame.length * 0.5)];
+  out.forEach((p) => { p.tier = p.sl > cut1 ? 1 : p.sl > cut2 ? 2 : 3; delete p.sl; });
   out.sort((a, b) => a.n.localeCompare(b.n));
 
   const usedClubs = {};
