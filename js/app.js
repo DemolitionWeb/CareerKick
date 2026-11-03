@@ -94,6 +94,27 @@
     return PLAYERS.filter((p) => p.tier <= DIFF[diffKey].tiers && (ignoreLeagues || leagueOk(p, cfg)));
   }
 
+  // ---------- giocatori già visti ----------
+  // Pescando a caso da capo a ogni partita gli stessi giocatori tornano spesso (con 300 giocatori, in 20 partite
+  // una ripetizione capita una volta su due): si ricordano gli ultimi usciti, per id Wikidata che resta uguale
+  // anche dopo un aggiornamento dei dati, e si propongono prima quelli mai visti, in ordine casuale.
+  // Finiti quelli, tornano i visti da più tempo: la metà più vecchia rimescolata, così l'ordine non si ripete uguale.
+  const SEEN_MAX = 2000;
+  let seen = store.get("seen", []);
+  function markSeen(p) {
+    seen = seen.filter((q) => q !== p.q);
+    seen.push(p.q);
+    if (seen.length > SEEN_MAX) seen = seen.slice(-SEEN_MAX);
+    store.set("seen", seen);
+  }
+  function freshQueue(pool) {
+    const when = new Map(seen.map((q, i) => [q, i]));
+    const unseen = shuffle(pool.filter((p) => !when.has(p.q)));
+    const old = pool.filter((p) => when.has(p.q)).sort((a, b) => when.get(a.q) - when.get(b.q));
+    const half = Math.ceil(old.length / 2);
+    return unseen.concat(shuffle(old.slice(0, half)), old.slice(half));
+  }
+
   // ---------- UI helpers ----------
   let toastTimer;
   function toast(msg) {
@@ -163,7 +184,7 @@
     } else {
       const pool = buildPool(diffKey);
       if (!pool.length) { toast(t("poolEmpty")); return; }
-      queue = shuffle(pool.slice());
+      queue = freshQueue(pool);
     }
     game = { mode, diffKey, d: DIFF[diffKey], queue, idx: -1, lives: 3, score: 0, solved: 0 };
     show("game");
@@ -173,8 +194,12 @@
   function nextRound() {
     game.idx++;
     // nella sfida 1v1 il rimescolamento usa il generatore col seme comune, così i due restano allineati
-    if (game.idx >= game.queue.length) { game.queue = shuffle(game.queue.slice(), game.rnd); game.idx = 0; }
+    if (game.idx >= game.queue.length) {
+      game.queue = game.mode === "duel" ? shuffle(game.queue.slice(), game.rnd) : freshQueue(game.queue);
+      game.idx = 0;
+    }
     const p = game.queue[game.idx];
+    markSeen(p);
     const d = game.d;
     Object.assign(game, {
       target: p,

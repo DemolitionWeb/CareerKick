@@ -1,7 +1,7 @@
 /* Service worker: l'app funziona anche offline e Chrome la può installare.
  * Strategia "stale-while-revalidate": risponde subito dalla cache e intanto scarica la versione nuova,
  * così dopo un aggiornamento dei giocatori basta riaprire l'app per vederli. */
-const CACHE = "careerkick-v1";
+const CACHE = "careerkick-v2"; // cambiarlo quando cambia la logica dell'app, così i nuovi file arrivano al primo avvio
 const SHELL = [
   "./", "index.html", "css/style.css", "js/i18n.js", "js/data.js", "js/app.js",
   "manifest.webmanifest", "icon.svg", "icons/icon-192.png", "icons/icon-512.png"

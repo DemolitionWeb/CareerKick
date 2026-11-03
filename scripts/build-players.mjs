@@ -84,6 +84,27 @@ function positionCode(label) {
   return null;
 }
 
+// con più ruoli su Wikidata "portiere" spesso è una presenza d'emergenza (es. Enzo Pérez): vale il ruolo di movimento.
+// Tra i ruoli di movimento conta il più offensivo, quello che il giocatore ha di solito nell'infobox.
+export function mainPosition(codes) {
+  if (!codes?.size) return null;
+  for (const c of ["FW", "MF", "DF"]) if (codes.has(c)) return c;
+  return "GK";
+}
+
+// Wikidata ha errori nelle statistiche: per i portieri a volte i gol sono quelli subiti (Abbiati 138 gol col Milan),
+// altrove ci sono cifre impossibili (2000 gol, 1480 presenze). Un dato non credibile si scarta (null) invece di mostrarlo.
+export function cleanStats(pos, years, apps, goals) {
+  if (apps != null && apps > Math.max(years, 1) * 70) apps = null; // più di 70 partite di campionato a stagione
+  if (apps == null) return [null, null];                          // gol senza presenze non si possono verificare
+  if (goals != null) {
+    // un portiere rigorista (Butt, Chilavert) arriva a un gol ogni 7-8 partite; i gol subiti sono quasi uno a partita
+    const maxGoals = pos === "GK" ? Math.max(3, apps * 0.2) : apps * 1.5 + 3;
+    if (goals > maxGoals) goals = null;
+  }
+  return [apps, goals];
+}
+
 // "Real Madrid Club de Fútbol" → "Real Madrid", "SSC Napoli" → "Napoli", "AS Reggina 1914" → "Reggina",
 // "Football Club de Sion" → "Sion", "Fussballclub Basel" → "Basel"
 export function shortName(name) {
@@ -164,7 +185,8 @@ async function main() {
       const natQ = r.nat && qid(r.nat.value);
       p.nat ??= SPECIAL_NATIONS[natQ] || r.natIso?.value || undefined;
       p.cit ??= r.citIso?.value;
-      p.pos ??= positionCode(r.posLabel?.value);
+      const pos = positionCode(r.posLabel?.value);
+      if (pos) (p.poss ??= new Set()).add(pos);
     }
 
     const aliases = await sparql(`
@@ -240,11 +262,13 @@ async function main() {
   // 4) pulizia e assemblaggio
   const out = [];
   for (const [id, p] of players) {
+    p.pos = mainPosition(p.poss);
     if (!p.n || !p.b || !p.pos || !p.stints) continue;
     // stesso club nello stesso anno = un solo periodo, unendo le statistiche se una delle due righe le ha
     const byKey = new Map();
     for (const s of p.stints) {
       if (!clubs[s.team] || EXCLUDE_TEAM.test(clubs[s.team].en || Object.values(clubs[s.team])[0])) continue;
+      if (s.b != null && s.b < s.a) s.b = null; // data di uscita prima dell'arrivo: errore su Wikidata, la si ignora
       const k = s.team + Math.floor(s.a), prev = byKey.get(k);
       if (!prev) byKey.set(k, { ...s });
       else { prev.b ??= s.b; prev.apps ??= s.apps; prev.goals ??= s.goals; }
@@ -254,9 +278,10 @@ async function main() {
     const c = stints.map((s, i) => {
       const next = stints[i + 1]?.a;
       const end = s.b ?? next ?? NOW;
+      const [apps, goals] = cleanStats(p.pos, Math.ceil(end - s.a), s.apps, s.goals);
       // un periodo con solo l'anno (es. prestito "2013–2013") parte da metà anno: deve durare abbastanza da cadere in una stagione
       const row = [s.team, leagueFor(s.team, s.a, Math.max(end, s.a + 0.2)), Math.floor(s.a),
-        s.b != null ? Math.floor(s.b) : next != null ? Math.floor(next) : null, s.apps, s.goals];
+        s.b != null ? Math.floor(s.b) : next != null ? Math.floor(next) : null, apps, goals];
       while (row.length > 3 && row[row.length - 1] == null) row.pop();
       return row;
     });
