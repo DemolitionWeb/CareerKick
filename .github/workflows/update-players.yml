@@ -1,16 +1,20 @@
-# Aggiorna i giocatori da Wikidata dopo ogni sessione di calciomercato e ripubblica il sito.
-# Le sessioni dei campionati chiudono tra fine agosto e la prima settimana di settembre, e a inizio febbraio: si aggiorna
-# pochi giorni dopo e di nuovo due settimane dopo, perché Wikidata registra i trasferimenti con un po' di ritardo.
+# Aggiorna i giocatori da Wikidata due volte al giorno e ripubblica il sito se qualcosa è cambiato.
+# Al mattino si prendono le modifiche fatte su Wikidata fino alla sera prima, alla sera quelle della giornata.
+# Gli orari sono in UTC (GitHub non conosce l'ora legale): 5:00 UTC = 6:00 d'inverno e 7:00 d'estate in Italia,
+# 20:00 UTC = 21:00 d'inverno e 22:00 d'estate. GitHub può far partire i workflow programmati con qualche minuto di ritardo.
 # Si può lanciare anche a mano da GitHub: Actions → Aggiorna giocatori → Run workflow.
 name: Aggiorna giocatori
 
 on:
   schedule:
-    - cron: "0 5 4 9 *"   # 4 settembre
-    - cron: "0 5 16 9 *"  # 16 settembre
-    - cron: "0 5 5 2 *"   # 5 febbraio
-    - cron: "0 5 17 2 *"  # 17 febbraio
+    - cron: "0 5 * * *"   # mattina
+    - cron: "0 20 * * *"  # sera
   workflow_dispatch:
+
+# se un aggiornamento è ancora in corso quando parte il successivo, il nuovo aspetta invece di sovrapporsi
+concurrency:
+  group: update-players
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -43,13 +47,17 @@ jobs:
       - name: Commit se ci sono novità
         id: commit
         run: |
-          if git diff --quiet js/data.js; then
+          # la prima riga del file contiene la data di generazione e cambia sempre: da sola non conta come novità,
+          # altrimenti si farebbe un commit (e una ripubblicazione) due volte al giorno anche senza cambiamenti
+          if git diff --quiet -I '^/\* GENERATO da scripts/build-players.mjs' js/data.js; then
             echo "Nessun cambiamento"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add js/data.js
-          git commit -m "Aggiornamento giocatori dopo il calciomercato ($(date +%Y-%m-%d))"
+          git commit -m "Aggiornamento giocatori ($(date -u +%Y-%m-%d) $( [ $(date -u +%H) -lt 12 ] && echo mattina || echo sera ))"
+          # se nel frattempo è arrivato un altro commit su main, ci si mette sopra invece di fallire
+          git pull --rebase
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
