@@ -20,7 +20,8 @@ Prende da Wikidata (i dati strutturati dietro gli infobox di Wikipedia, licenza 
 - `--since`: esclude chi ha chiuso la carriera prima di quell'anno.
 - Il campionato di ogni periodo in un club viene dalle stagioni effettivamente giocate (es. Brescia 1995 = Serie A anche se oggi è altrove). La vecchia First Division inglese conta come Premier League. Per Portogallo, Olanda, Belgio, Svizzera e Grecia Wikidata quasi mai elenca le squadre di ogni stagione: negli anni senza dati vale il campionato attuale del club.
 - I livelli di notorietà (Facile/Media/Difficile) si calcolano sui giocatori dei 5 grandi campionati e valgono con le stesse soglie per gli altri.
-- L'import richiede circa 10 minuti; ultimo risultato: ~4650 giocatori, ~3200 club.
+- L'import richiede circa 10 minuti; ultimo risultato: oltre 5.000 giocatori e circa 3.500 club.
+- Pulizia dei dati: sono escluse le calciatrici (il quiz è sul calcio maschile) e, quando Wikidata ha due voci per lo stesso club (es. "AEK Athens" e "A.E.K."), il periodo compare una volta sola.
 - **Filtro campionati**: Tutti / Singolo (ha giocato in quel campionato) / Multi (ha giocato in *tutti* i campionati scelti).
 - **Modalità**: Partita singola, Sfida del giorno (stesso giocatore per tutti), Sopravvivenza (3 vite + timer), Sfida 1v1 online.
 - **Sfida 1v1**: chi crea la stanza riceve un codice di 6 caratteri, nuovo ogni volta, e sceglie la durata (2/3/5 minuti); l'altro entra col codice o col link `?duel=CODICE`. Stesso giocatore per entrambi: chi lo indovina per primo prende i punti e si passa tutti e due al successivo (chi sbaglia o si arrende aspetta l'altro); vince chi ha più punti allo scadere. Collegamento diretto tra i browser con [PeerJS](https://peerjs.com) (WebRTC), caricato solo quando serve: niente server né account da gestire, ma su alcune reti mobili o aziendali la connessione può non riuscire.
@@ -55,7 +56,6 @@ npx cap open android   # build e firma da Android Studio
 Prima di pubblicare conviene spostare i file web in una cartella `www/` e usare `--web-dir www`.
 
 ## Prima del rilascio
-- Verificare i dati in `js/data.js` (scritti a mano, possono contenere errori) e ampliarli.
-- I nomi dei club sono in italiano: localizzarli se serve.
+- Controllare a campione i dati in `js/data.js`: vengono da Wikidata, che a volte ha date o statistiche sbagliate.
 - Non usare loghi, stemmi o foto di club/giocatori senza licenza; i nomi come dato fattuale vanno bene.
 - Scegliere il nome definitivo e controllare che non sia un marchio registrato.

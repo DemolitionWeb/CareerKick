@@ -118,6 +118,33 @@ export function shortName(name) {
   return s.length >= 3 ? s : name;
 }
 
+// Wikidata a volte ha due voci per lo stesso club (la società polisportiva e la squadra di calcio, o un doppione):
+// un giocatore risulta così due volte nello stesso club, con gli stessi anni ("AEK Athens" e "A.E.K.", "Legia Warsaw" due volte).
+// Due righe sono lo stesso periodo se hanno gli stessi anni e il nome è uguale in una lingua, oppure se un nome è
+// l'inizio dell'altro (A.E.K. → AEK Athens) e le presenze coincidono. Le squadre riserve ("Real Madrid C") hanno presenze
+// diverse dalla prima squadra e quindi restano separate.
+// rows: [club, campionato, anno arrivo, anno uscita, presenze, gol]; clubs: { qid: { lingua: nome } }
+const compact = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+export function sameClub(rowA, rowB, clubs) {
+  if (rowA[0] === rowB[0] || rowA[2] !== rowB[2] || (rowA[3] ?? null) !== (rowB[3] ?? null)) return false;
+  const na = Object.values(clubs[rowA[0]] || {}).map(compact).filter(Boolean);
+  const nb = Object.values(clubs[rowB[0]] || {}).map(compact).filter(Boolean);
+  if (na.some((x) => nb.includes(x))) return true;
+  const prefix = na.some((x) => nb.some((y) => x.length >= 3 && y.length >= 3 && (x.startsWith(y) || y.startsWith(x))));
+  return prefix && rowA[4] != null && rowA[4] > 0 && rowA[4] === rowB[4];
+}
+export function mergeDuplicateClubs(rows, clubs) {
+  const out = [];
+  for (const row of rows) {
+    const twin = out.find((r) => sameClub(r, row, clubs));
+    if (!twin) { out.push(row); continue; }
+    // tiene la voce con il campionato riconosciuto e completa i dati mancanti
+    if (twin[1] === "X" && row[1] !== "X") { twin[0] = row[0]; twin[1] = row[1]; }
+    for (let i = 4; i < row.length; i++) twin[i] ??= row[i];
+  }
+  return out;
+}
+
 // data ISO → anno con decimali; una data al 1° gennaio di solito ha solo l'anno, la si porta a luglio
 function frac(iso) {
   const y = Number(iso.slice(0, 4)), md = iso.slice(5, 10);
@@ -156,6 +183,7 @@ async function main() {
         VALUES ?club { ${batch.map((q) => "wd:" + q).join(" ")} }
         ?player p:P54/ps:P54 ?club ; wdt:P106 wd:Q937857 ; wikibase:sitelinks ?sl .
         FILTER(?sl >= ${MIN_SITELINKS})
+        FILTER NOT EXISTS { ?player wdt:P21 wd:Q6581072 } # il quiz è sul calcio maschile: escluse le calciatrici
       }`);
     rows.forEach((r) => players.set(qid(r.player.value), { sl: Number(r.sl.value) }));
   }
@@ -275,7 +303,7 @@ async function main() {
     }
     const stints = [...byKey.values()].sort((x, y) => x.a - y.a);
     // [club, campionato, anno arrivo, anno uscita, presenze, gol]; null = dato assente (uscita null = ancora lì o ignota)
-    const c = stints.map((s, i) => {
+    const c = mergeDuplicateClubs(stints.map((s, i) => {
       const next = stints[i + 1]?.a;
       const end = s.b ?? next ?? NOW;
       const [apps, goals] = cleanStats(p.pos, Math.ceil(end - s.a), s.apps, s.goals);
@@ -284,7 +312,7 @@ async function main() {
         s.b != null ? Math.floor(s.b) : next != null ? Math.floor(next) : null, apps, goals];
       while (row.length > 3 && row[row.length - 1] == null) row.pop();
       return row;
-    });
+    }), clubs);
     if (c.length < 2 || c[c.length - 1][2] < SINCE) continue;
     if (!c.some((x) => x[1] !== "X")) continue;
     out.push({ q: id, n: p.n, nat: p.nat || p.cit || "", pos: p.pos, b: p.b, sl: p.sl, c,

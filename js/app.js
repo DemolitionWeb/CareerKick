@@ -654,8 +654,15 @@
   // ---------- eventi ----------
   function init() {
     const sel = $("#langSelect");
-    sel.innerHTML = Object.keys(I18N).map((l) => `<option value="${l}">${l.toUpperCase()} · ${I18N[l].langName}</option>`).join("");
-    sel.value = settings.lang;
+    // su schermi stretti il menu mostra solo la sigla ("IT"), così il nome del gioco nella barra non viene tagliato
+    const narrow = matchMedia("(max-width: 480px)");
+    const fillLangs = () => {
+      sel.innerHTML = Object.keys(I18N).map((l) =>
+        `<option value="${l}">${l.toUpperCase()}${narrow.matches ? "" : " · " + I18N[l].langName}</option>`).join("");
+      sel.value = settings.lang;
+    };
+    fillLangs();
+    narrow.addEventListener("change", fillLangs);
     sel.onchange = () => {
       settings.lang = sel.value; saveSettings(); applyI18n(); renderHome();
       if (game) renderGame();
