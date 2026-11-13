@@ -279,18 +279,28 @@
   }
   function stopTimer() { clearInterval(timerId); timerId = null; }
 
+  // icone SVG del tabellone (al posto delle emoji, che cambiano aspetto da un telefono all'altro)
+  const svgIc = (d, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const IC = {
+    heart: (on) => svgIc('<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z" fill="currentColor"/>', on ? "heart" : "heart off"),
+    clock: svgIc('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
+    check: svgIc('<path d="M20 6 9 17l-5-5"/>'),
+    lock: svgIc('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>')
+  };
+
   function renderHud() {
     const g = game, pills = [];
     pills.push(`<span class="pill">${esc(t(g.diffKey))}</span>`);
     if (!g.roundOver) pills.push(`<span class="pill">${esc(t("attempts"))}: ${g.attemptsLeft}</span>`);
     if (g.mode === "survival") {
-      pills.push(`<span class="pill">${"❤️".repeat(Math.max(g.lives, 0))}${"🖤".repeat(3 - Math.max(g.lives, 0))}</span>`);
-      if (!g.roundOver) pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">⏱ ${g.timeLeft}s</span>`);
-      pills.push(`<span class="pill">✅ ${g.solved}</span>`);
+      const lives = Math.max(g.lives, 0);
+      pills.push(`<span class="pill" aria-label="${lives}/3">${[0, 1, 2].map((i) => IC.heart(i < lives)).join("")}</span>`);
+      if (!g.roundOver) pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">${IC.clock} ${g.timeLeft}s</span>`);
+      pills.push(`<span class="pill">${IC.check} ${g.solved}</span>`);
     }
     if (g.mode === "duel") {
       const m = Math.floor(g.timeLeft / 60), s = String(g.timeLeft % 60).padStart(2, "0");
-      pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">⏱ ${m}:${s}</span>`);
+      pills.push(`<span class="pill ${g.timeLeft <= 10 ? "warn" : ""}">${IC.clock} ${m}:${s}</span>`);
       pills.push(`<span class="pill me">${esc(t("you"))}: ${g.score}</span>`);
       pills.push(`<span class="pill">${esc(t("opponent"))}: ${g.opp}</span>`);
     } else pills.push(`<span class="pill">${esc(t("points"))}: ${g.score}</span>`);
@@ -319,7 +329,7 @@
     $("#info").innerHTML = INFO_KEYS.map((k, i) =>
       i < infoShown
         ? `<div><small>${esc(t(k))}</small><b>${esc(values[i])}</b></div>`
-        : `<div class="locked"><small>${esc(t(k))}</small><b>🔒</b></div>`
+        : `<div class="locked"><small>${esc(t(k))}</small><b>${IC.lock}</b></div>`
     ).join("");
 
     $("#wrongs").innerHTML = g.wrongs.map((w) => `<span>${esc(w.n)}</span>`).join("");

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b3d2e">
+  <meta name="theme-color" content="#0a0f1c">
   <!-- titolo e descrizione vengono tradotti da app.js (chiavi seoTitle e seoDesc); questi sono quelli italiani -->
   <title>Indovina il calciatore dalla carriera – Quiz calcio gratis | CareerKick</title>
   <meta name="description" content="Quiz calcio gratis: indovina il calciatore dalla sua carriera, club dopo club. Oltre 5.000 giocatori di Serie A, Premier League, LaLiga e altri 7 campionati. Sfida del giorno, sopravvivenza e sfida 1v1.">
@@ -41,16 +41,19 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="app">
     <header class="topbar">
-      <button id="btnBack" class="icon-btn" aria-label="Menu" hidden>←</button>
-      <div class="brand"><span class="ball">⚽</span> CareerKick</div>
+      <button id="btnBack" class="icon-btn" aria-label="Menu" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="brand">CareerKick <span class="live" aria-hidden="true">LIVE</span></div>
       <div class="top-actions">
         <select id="langSelect" class="lang-select" aria-label="Language"></select>
-        <button id="btnStats" class="icon-btn" aria-label="Stats">📊</button>
+        <button id="btnStats" class="icon-btn" aria-label="Stats"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-8"/></svg></button>
       </div>
     </header>
 
@@ -59,7 +62,7 @@
       <section id="screen-home" class="screen active">
         <!-- i testi fissi in italiano servono a chi legge la pagina senza eseguire JavaScript (motori di ricerca, anteprime);
              app.js li sostituisce con quelli della lingua scelta -->
-        <h1 class="tagline" data-i18n="tagline">Indovina il calciatore dal suo percorso in carriera</h1>
+        <div class="hero"><h1 class="tagline" data-i18n="tagline">Indovina il calciatore dal suo percorso in carriera</h1></div>
 
         <div class="card">
           <h2 data-i18n="setupTitle"></h2>
@@ -86,20 +89,20 @@
         <h2 class="section-title" data-i18n="modes">Modalità</h2>
         <div class="modes">
           <button class="mode-card" data-mode="classic">
-            <span class="mode-icon">🎯</span>
+            <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeClassic">Partita singola</strong><small data-i18n="modeClassicDesc">Un giocatore, indizi progressivi</small></span>
           </button>
           <button class="mode-card" data-mode="daily">
-            <span class="mode-icon">📅</span>
+            <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeDaily">Sfida del giorno</strong><small data-i18n="modeDailyDesc">Lo stesso giocatore per tutti, ogni giorno</small></span>
             <span class="badge" id="dailyBadge" hidden>✓</span>
           </button>
           <button class="mode-card" data-mode="survival">
-            <span class="mode-icon">❤️</span>
+            <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeSurvival">Sopravvivenza</strong><small data-i18n="modeSurvivalDesc">3 vite e tempo limitato: quanti ne indovini?</small></span>
           </button>
           <button class="mode-card" data-mode="duel">
-            <span class="mode-icon">⚔️</span>
+            <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M9.5 6.5 14 2h3v3l-4.5 4.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeDuel">Sfida 1v1</strong><small data-i18n="modeDuelDesc">Contro un amico online: chi fa più punti nel tempo limite?</small></span>
           </button>
         </div>
