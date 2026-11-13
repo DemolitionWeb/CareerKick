@@ -31,7 +31,7 @@ jobs:
       - name: Prepara i file del sito
         run: |
           mkdir _site
-          cp -r index.html manifest.webmanifest sw.js icon.svg css js icons _site/
+          cp -r index.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml css js icons _site/
           [ -f CNAME ] && cp CNAME _site/ || true
 
       - uses: actions/configure-pages@v5

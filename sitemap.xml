@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- una voce per lingua: ogni versione elenca le altre, come gli hreflang in index.html -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://careerkick.it/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=it</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=es</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=fr</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=de</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+  <url>
+    <loc>https://careerkick.it/?lang=pt</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://careerkick.it/"/>
+  </url>
+</urlset>

@@ -45,7 +45,13 @@ button { cursor: pointer; }
 .screen.active { display: block; animation: fade .2s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(4px); } }
 
-.tagline { color: var(--muted); margin: 4px 0 16px; }
+.tagline { color: var(--muted); margin: 4px 0 16px; font-size: 16px; font-weight: 400; }
+/* "Come si gioca" in fondo alla home */
+.about { margin-top: 22px; }
+.about h2 { margin-top: 0; }
+.about p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 8px 0 0; }
+.about details { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+.about summary { cursor: pointer; font-weight: 600; }
 h2 { font-size: 18px; margin: 0 0 12px; }
 h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 16px 0 8px; }
 .section-title { margin: 22px 0 10px; }

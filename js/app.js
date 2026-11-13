@@ -29,6 +29,9 @@
     { lang: detectLang(), difficulty: "medium", leagueMode: "all", single: "SA", multi: ["SA", "PL"], duelDur: 180 },
     store.get("settings", {})
   );
+  // ?lang=xx: link a una lingua precisa (è anche l'indirizzo di ogni lingua per i motori di ricerca, vedi hreflang in index.html)
+  const langParam = () => { const l = new URLSearchParams(location.search).get("lang"); return I18N[l] ? l : null; };
+  if (langParam()) settings.lang = langParam();
   const stats = Object.assign({ played: 0, wins: 0, streak: 0, bestStreak: 0, bestSurvival: 0 }, store.get("stats", {}));
   const saveSettings = () => store.set("settings", settings);
   const saveStats = () => store.set("stats", stats);
@@ -130,6 +133,12 @@
   function applyI18n() {
     document.documentElement.lang = settings.lang;
     document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.title = t("seoTitle");
+    document.querySelector('meta[name="description"]').content = t("seoDesc");
+    // canonical: la versione ?lang= se si è arrivati da lì, altrimenti la pagina principale
+    let canon = document.querySelector('link[rel="canonical"]');
+    if (!canon) { canon = document.createElement("link"); canon.rel = "canonical"; document.head.appendChild(canon); }
+    canon.href = "https://careerkick.it/" + (langParam() ? "?lang=" + langParam() : "");
     $("#guessInput").placeholder = t("guessPh");
     $("#roomInput").placeholder = t("roomCodePh");
   }
@@ -664,6 +673,8 @@
     fillLangs();
     narrow.addEventListener("change", fillLangs);
     sel.onchange = () => {
+      // se l'indirizzo ha ?lang= lo si aggiorna, altrimenti ricaricando la pagina tornerebbe la lingua vecchia
+      if (langParam()) history.replaceState(null, "", location.pathname + "?lang=" + sel.value);
       settings.lang = sel.value; saveSettings(); applyI18n(); renderHome();
       if (game) renderGame();
     };
@@ -704,7 +715,7 @@
 
     // link d'invito ?duel=CODICE: si entra subito nella stanza (e si pulisce l'URL, così ricaricando non si rientra)
     const invited = new URLSearchParams(location.search).get("duel");
-    if (invited) { history.replaceState(null, "", location.pathname); openLobby(invited); }
+    if (invited) { history.replaceState(null, "", location.pathname + (langParam() ? "?lang=" + langParam() : "")); openLobby(invited); }
 
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       navigator.serviceWorker.register("sw.js").catch(() => { /* l'app funziona anche senza */ });

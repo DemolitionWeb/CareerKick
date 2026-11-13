@@ -4,11 +4,40 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b3d2e">
-  <title>CareerKick</title>
-  <meta name="description" content="Indovina il calciatore dal suo percorso in carriera. Gioco gratuito in 6 lingue con migliaia di giocatori.">
-  <meta property="og:title" content="CareerKick">
-  <meta property="og:description" content="Indovina il calciatore dal suo percorso in carriera.">
-  <meta property="og:image" content="icons/icon-512.png">
+  <!-- titolo e descrizione vengono tradotti da app.js (chiavi seoTitle e seoDesc); questi sono quelli italiani -->
+  <title>Indovina il calciatore dalla carriera – Quiz calcio gratis | CareerKick</title>
+  <meta name="description" content="Quiz calcio gratis: indovina il calciatore dalla sua carriera, club dopo club. Oltre 5.000 giocatori di Serie A, Premier League, LaLiga e altri 7 campionati. Sfida del giorno, sopravvivenza e sfida 1v1.">
+  <!-- una versione per lingua con ?lang=; la pagina senza parametro sceglie la lingua del browser.
+       Il canonical lo aggiunge app.js, perché deve puntare alla versione della lingua mostrata -->
+  <link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it">
+  <link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en">
+  <link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es">
+  <link rel="alternate" hreflang="fr" href="https://careerkick.it/?lang=fr">
+  <link rel="alternate" hreflang="de" href="https://careerkick.it/?lang=de">
+  <link rel="alternate" hreflang="pt" href="https://careerkick.it/?lang=pt">
+  <link rel="alternate" hreflang="x-default" href="https://careerkick.it/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CareerKick">
+  <meta property="og:url" content="https://careerkick.it/">
+  <meta property="og:title" content="Indovina il calciatore dalla carriera – CareerKick">
+  <meta property="og:description" content="Quiz calcio gratis: riconosci il calciatore dai club in cui ha giocato. Oltre 5.000 giocatori, sfida del giorno e sfida 1v1.">
+  <meta property="og:image" content="https://careerkick.it/icons/icon-512.png">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CareerKick",
+    "url": "https://careerkick.it/",
+    "description": "Quiz calcio gratis: indovina il calciatore dalla sua carriera, club dopo club.",
+    "applicationCategory": "GameApplication",
+    "genre": ["Quiz", "Calcio"],
+    "operatingSystem": "Web",
+    "inLanguage": ["it", "en", "es", "fr", "de", "pt"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  }
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -28,7 +57,9 @@
     <main>
       <!-- HOME -->
       <section id="screen-home" class="screen active">
-        <p class="tagline" data-i18n="tagline"></p>
+        <!-- i testi fissi in italiano servono a chi legge la pagina senza eseguire JavaScript (motori di ricerca, anteprime);
+             app.js li sostituisce con quelli della lingua scelta -->
+        <h1 class="tagline" data-i18n="tagline">Indovina il calciatore dal suo percorso in carriera</h1>
 
         <div class="card">
           <h2 data-i18n="setupTitle"></h2>
@@ -52,26 +83,45 @@
           <p class="pool" id="poolInfo"></p>
         </div>
 
-        <h2 class="section-title" data-i18n="modes"></h2>
+        <h2 class="section-title" data-i18n="modes">Modalità</h2>
         <div class="modes">
           <button class="mode-card" data-mode="classic">
             <span class="mode-icon">🎯</span>
-            <span class="mode-text"><strong data-i18n="modeClassic"></strong><small data-i18n="modeClassicDesc"></small></span>
+            <span class="mode-text"><strong data-i18n="modeClassic">Partita singola</strong><small data-i18n="modeClassicDesc">Un giocatore, indizi progressivi</small></span>
           </button>
           <button class="mode-card" data-mode="daily">
             <span class="mode-icon">📅</span>
-            <span class="mode-text"><strong data-i18n="modeDaily"></strong><small data-i18n="modeDailyDesc"></small></span>
+            <span class="mode-text"><strong data-i18n="modeDaily">Sfida del giorno</strong><small data-i18n="modeDailyDesc">Lo stesso giocatore per tutti, ogni giorno</small></span>
             <span class="badge" id="dailyBadge" hidden>✓</span>
           </button>
           <button class="mode-card" data-mode="survival">
             <span class="mode-icon">❤️</span>
-            <span class="mode-text"><strong data-i18n="modeSurvival"></strong><small data-i18n="modeSurvivalDesc"></small></span>
+            <span class="mode-text"><strong data-i18n="modeSurvival">Sopravvivenza</strong><small data-i18n="modeSurvivalDesc">3 vite e tempo limitato: quanti ne indovini?</small></span>
           </button>
           <button class="mode-card" data-mode="duel">
             <span class="mode-icon">⚔️</span>
-            <span class="mode-text"><strong data-i18n="modeDuel"></strong><small data-i18n="modeDuelDesc"></small></span>
+            <span class="mode-text"><strong data-i18n="modeDuel">Sfida 1v1</strong><small data-i18n="modeDuelDesc">Contro un amico online: chi fa più punti nel tempo limite?</small></span>
           </button>
         </div>
+
+        <!-- come si gioca: spiega il gioco a chi arriva dalla ricerca e dà ai motori di ricerca un testo da leggere -->
+        <section class="card about">
+          <h2 data-i18n="aboutTitle">Come si gioca</h2>
+          <p data-i18n="aboutText">CareerKick è un quiz di calcio gratis: vedi la carriera di un calciatore, club dopo club con gli anni, e devi indovinare chi è. Ogni tentativo sbagliato svela un nuovo indizio: un altro club, la nazionalità, il ruolo, l'anno di nascita.</p>
+          <p data-i18n="aboutText2">Ci sono oltre 5.000 giocatori dal 1995 a oggi, presi da Serie A, Premier League, LaLiga, Bundesliga, Ligue 1, Primeira Liga, Eredivisie e dai campionati di Belgio, Svizzera e Grecia. Scegli la difficoltà e i campionati, poi gioca da solo, alla sfida del giorno o contro un amico.</p>
+          <details>
+            <summary data-i18n="faq1q">È gratis?</summary>
+            <p data-i18n="faq1a">Sì, è gratis, senza registrazione, e funziona dal browser del telefono o del computer. Puoi anche installarlo come app.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq2q">Ogni quanto si aggiornano i giocatori?</summary>
+            <p data-i18n="faq2a">Dopo ogni sessione di calciomercato, in estate e a gennaio, così le carriere includono gli ultimi trasferimenti.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq3q">Come funziona la sfida 1v1?</summary>
+            <p data-i18n="faq3a">Crei una stanza e mandi il codice a un amico: indovinate gli stessi calciatori nello stesso momento e vince chi fa più punti prima che scada il tempo.</p>
+          </details>
+        </section>
       </section>
 
       <!-- SFIDA 1v1: stanza -->
