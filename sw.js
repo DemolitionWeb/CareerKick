@@ -1,6 +1,7 @@
 /* Service worker: l'app funziona anche offline e Chrome la può installare.
- * Strategia "stale-while-revalidate": risponde subito dalla cache e intanto scarica la versione nuova,
- * così dopo un aggiornamento dei giocatori basta riaprire l'app per vederli. */
+ * La pagina (index.html) arriva prima dalla rete e solo senza connessione dalla cache: così dopo un deploy
+ * si vede subito la versione nuova, che con i suoi link ?v= porta con sé i CSS e JS nuovi.
+ * CSS, JS e immagini usano "stale-while-revalidate": rispondono subito dalla cache e intanto si aggiornano. */
 // VERSION la scrive il deploy (deploy.yml) con il commit pubblicato: "dev" vale solo in locale.
 // La stessa versione è nei link ?v= di index.html, così Cloudflare e i browser scaricano i file nuovi a ogni pubblicazione.
 const VERSION = "dev";
@@ -28,11 +29,25 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET" || url.origin !== location.origin) return;
   // /api/ (statistiche e dashboard) va sempre in rete: dalla cache la dashboard mostrerebbe dati vecchi
   if (url.pathname.startsWith("/api/")) return;
+  if (req.mode === "navigate") {
+    // la pagina si salva sempre sotto l'indirizzo senza parametri (?lang=, ?duel= sono la stessa pagina).
+    // Prima la si cercava con ignoreSearch, che restituiva la copia salvata all'installazione e mai quelle
+    // aggiornate (salvate con il loro ?lang=): chi apriva /?lang=it restava sulla versione vecchia.
+    const key = url.origin + url.pathname;
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(key, copy)); }
+          return res;
+        })
+        .catch(async () => (await caches.match(key)) || caches.match("index.html"))
+    );
+    return;
+  }
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      // la pagina si cerca senza parametri (?lang=, ?duel= sono la stessa pagina); CSS e JS invece con il loro ?v=,
-      // altrimenti una versione nuova riceverebbe il file vecchio dalla cache
-      const cached = await cache.match(req, { ignoreSearch: req.mode === "navigate" });
+      // CSS e JS si cercano con il loro ?v=: una versione nuova non deve ricevere il file vecchio dalla cache
+      const cached = await cache.match(req);
       const fresh = fetch(req)
         .then((res) => { if (res.ok) cache.put(req, res.clone()); return res; })
         .catch(() => cached);
