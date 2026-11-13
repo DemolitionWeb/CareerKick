@@ -633,10 +633,24 @@
     const ul = $("#suggest");
     suggestions = [];
     if (game.d.suggest && q.length >= game.d.minChars) {
+      // chi scrive un cognome intero e preme Invio deve trovare quel giocatore per primo: con l'ordine alfabetico
+      // "messi" sceglieva Giovanni Silva de Oliveira (soprannome "Giovanni Messias") invece di Lionel Messi.
+      // A parità di rango vengono prima i più famosi (tier più basso), poi l'ordine alfabetico.
+      const word = (k) => (" " + k + " ").includes(" " + q + " ");
+      const rank = (s) => {
+        const [name, ...alias] = s.keys;
+        if (s.keys.includes(q)) return 0;              // nome o soprannome esatto
+        if (word(name)) return 1;                      // parola intera del nome ("messi" in "lionel messi")
+        if (alias.some(word)) return 2;                // parola intera di un soprannome
+        if (name.startsWith(q)) return 3;              // inizio del nome
+        if (name.includes(" " + q)) return 4;          // inizio di una parola del nome
+        return 5;                                      // inizio di un soprannome
+      };
       suggestions = SEARCH
         .filter((s) => s.keys.some((k) => k.startsWith(q) || k.includes(" " + q)))
-        .sort((a, b) => (b.keys[0].startsWith(q) - a.keys[0].startsWith(q)) || a.p.n.localeCompare(b.p.n))
-        .slice(0, 6).map((s) => s.p);
+        .map((s) => ({ s, r: rank(s) }))
+        .sort((a, b) => a.r - b.r || a.s.p.tier - b.s.p.tier || a.s.p.n.localeCompare(b.s.p.n))
+        .slice(0, 6).map((x) => x.s.p);
     }
     selIdx = 0;
     ul.innerHTML = suggestions.map((p, i) =>
