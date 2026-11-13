@@ -1,9 +1,12 @@
 /* Service worker: l'app funziona anche offline e Chrome la può installare.
  * Strategia "stale-while-revalidate": risponde subito dalla cache e intanto scarica la versione nuova,
  * così dopo un aggiornamento dei giocatori basta riaprire l'app per vederli. */
-const CACHE = "careerkick-v6"; // cambiarlo quando cambia la logica dell'app, così i nuovi file arrivano al primo avvio
+// VERSION la scrive il deploy (deploy.yml) con il commit pubblicato: "dev" vale solo in locale.
+// La stessa versione è nei link ?v= di index.html, così Cloudflare e i browser scaricano i file nuovi a ogni pubblicazione.
+const VERSION = "dev";
+const CACHE = "careerkick-" + VERSION;
 const SHELL = [
-  "./", "index.html", "css/style.css", "js/i18n.js", "js/data.js", "js/app.js",
+  "./", "index.html", "css/style.css?v=" + VERSION, "js/i18n.js?v=" + VERSION, "js/data.js?v=" + VERSION, "js/app.js?v=" + VERSION,
   "manifest.webmanifest", "icon.svg", "icons/icon-192.png", "icons/icon-512.png"
 ];
 
@@ -27,7 +30,9 @@ self.addEventListener("fetch", (e) => {
   if (url.pathname.startsWith("/api/")) return;
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(req, { ignoreSearch: true });
+      // la pagina si cerca senza parametri (?lang=, ?duel= sono la stessa pagina); CSS e JS invece con il loro ?v=,
+      // altrimenti una versione nuova riceverebbe il file vecchio dalla cache
+      const cached = await cache.match(req, { ignoreSearch: req.mode === "navigate" });
       const fresh = fetch(req)
         .then((res) => { if (res.ok) cache.put(req, res.clone()); return res; })
         .catch(() => cached);
