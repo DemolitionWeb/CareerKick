@@ -156,14 +156,22 @@ async function main() {
   const seasons = {}; // code -> { years: Set, teams: Map(team -> Set(anno di inizio stagione)), last }
   for (const [leagueQ, code] of [...Object.entries(LEAGUES), ...Object.entries(LEAGUE_ALIASES)]) {
     console.log(`Stagioni ${code} (${leagueQ})…`);
+    // dal 2020-21 le stagioni di Bundesliga (e alcune greche) elencano una voce "prima squadra" separata
+    // (es. Q97905919 "FC Bayern München") invece del club a cui sono collegati i giocatori (Q15789):
+    // la stagione vale anche per il club padre (P831), altrimenti Bayern, Dortmund & co. risultano "Altro campionato"
     const rows = await sparql(`
-      SELECT ?team ?start WHERE { ?season wdt:P3450 wd:${leagueQ} ; wdt:P1923 ?team ; wdt:P580 ?start }`);
+      SELECT ?team ?parent ?start WHERE {
+        ?season wdt:P3450 wd:${leagueQ} ; wdt:P1923 ?team ; wdt:P580 ?start .
+        OPTIONAL { ?team wdt:P831 ?parent }
+      }`);
     const L = (seasons[code] ??= { years: new Set(), teams: new Map(), last: 0 });
     for (const r of rows) {
-      const y = Number(r.start.value.slice(0, 4)), team = qid(r.team.value);
+      const y = Number(r.start.value.slice(0, 4));
       L.years.add(y); L.last = Math.max(L.last, y);
-      if (!L.teams.has(team)) L.teams.set(team, new Set());
-      L.teams.get(team).add(y);
+      for (const team of [qid(r.team.value), r.parent && qid(r.parent.value)].filter(Boolean)) {
+        if (!L.teams.has(team)) L.teams.set(team, new Set());
+        L.teams.get(team).add(y);
+      }
     }
   }
 
@@ -237,13 +245,17 @@ async function main() {
         OPTIONAL { ?st pq:P1350 ?apps }
         OPTIONAL { ?st pq:P1351 ?goals }
       }`);
+    // una data "valore sconosciuto" su Wikidata arriva come nodo anonimo (…/.well-known/genid/…), non come data:
+    // va trattata come assente, altrimenti l'anno diventa NaN e il periodo finisce in "Altro campionato"
+    const date = (b) => (b && /^\d{4}-\d{2}-\d{2}/.test(b.value) ? b.value : null);
     for (const r of career) {
-      if (!r.start) continue;
+      const start = date(r.start), end = date(r.end);
+      if (!start) continue;
       const p = players.get(qid(r.player.value));
       const team = qid(r.team.value);
       const num = (b) => (b && /^\d+$/.test(b.value) ? Number(b.value) : null);
       (p.stints ??= []).push({
-        team, a: frac(r.start.value), b: r.end ? frac(r.end.value) : null,
+        team, a: frac(start), b: end ? frac(end) : null,
         apps: num(r.apps), goals: num(r.goals)
       });
       teams.add(team);
