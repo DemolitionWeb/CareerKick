@@ -657,14 +657,23 @@
       `<li data-i="${i}" class="${i === selIdx ? "sel" : ""} ${game.wrongs.includes(p) ? "tried" : ""}">${esc(p.n)}</li>`
     ).join("");
   }
+  // due giocatori possono avere lo stesso nome (Luis Suárez, Jorginho, Fred) o un soprannome uguale al nome di un
+  // altro ("Adriano"): se quello che ha scritto o scelto il giocatore vale anche per il giocatore da indovinare,
+  // la risposta è giusta, invece di prendere il primo omonimo in ordine alfabetico
+  const KEYS = new Map(SEARCH.map((s) => [s.p, s.keys]));
+  function sameAsTarget(p, q) {
+    const tk = KEYS.get(game.target);
+    return p === game.target || KEYS.get(p)[0] === tk[0] || (tk.includes(q) && KEYS.get(p).includes(q));
+  }
   function pickFromInput() {
-    if (suggestions.length) return suggestions[selIdx];
     const q = norm($("#guessInput").value);
+    if (suggestions.length) { const p = suggestions[selIdx]; return sameAsTarget(p, q) ? game.target : p; }
     if (!q) return null;
+    // basta il cognome del giocatore da indovinare, anche se altri lo condividono o lo hanno come soprannome
+    // (Carlos Ruiz ha il soprannome "Messi": scrivendo "messi" con Lionel Messi da indovinare vale Lionel Messi)
+    if (KEYS.get(game.target).includes(q) || KEYS.get(game.target)[0].split(" ").pop() === q) return game.target;
     const exact = SEARCH.find((s) => s.keys.includes(q));
     if (exact) return exact.p;
-    // basta il cognome del giocatore da indovinare, anche se altri lo condividono
-    if (norm(game.target.n).split(" ").pop() === q) return game.target;
     const bySurname = SEARCH.filter((s) => s.keys[0].split(" ").pop() === q);
     return bySurname.length === 1 ? bySurname[0].p : null;
   }
