@@ -7,8 +7,24 @@
   <!-- titolo e descrizione vengono tradotti da app.js (chiavi seoTitle e seoDesc); questi sono quelli italiani -->
   <title>Indovina il calciatore dalla carriera – Quiz calcio gratis | CareerKick</title>
   <meta name="description" content="Quiz calcio gratis: indovina il calciatore dalla sua carriera, club dopo club. Oltre 5.000 giocatori di Serie A, Premier League, LaLiga e altri 7 campionati. Sfida del giorno, sopravvivenza e sfida 1v1.">
-  <!-- una versione per lingua con ?lang=; la pagina senza parametro sceglie la lingua del browser.
+  <!-- una versione per lingua con ?lang=. La pagina senza parametro (x-default) non mostra contenuti suoi:
+       lo script qui sotto la manda subito alla versione nella lingua salvata o del browser. Prima la mostrava
+       nella lingua del browser, così Google (browser inglese) la vedeva identica a ?lang=en e la sceglieva come
+       canonical al posto di ?lang=en.
        Il canonical lo aggiunge app.js, perché deve puntare alla versione della lingua mostrata -->
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var langs = ["it", "en", "es", "fr", "de", "pt"]; // le lingue di js/i18n.js
+      if (langs.indexOf(q.get("lang")) >= 0) return;
+      var lang = null;
+      try { lang = (JSON.parse(localStorage.getItem("ck_settings")) || {}).lang; } catch (e) { /* ignora */ }
+      if (langs.indexOf(lang) < 0) lang = (navigator.language || "en").slice(0, 2);
+      if (langs.indexOf(lang) < 0) lang = "en";
+      q.set("lang", lang); // gli altri parametri (es. ?duel=) restano
+      location.replace(location.pathname + "?" + q + location.hash);
+    })();
+  </script>
   <link rel="alternate" hreflang="it" href="https://careerkick.it/?lang=it">
   <link rel="alternate" hreflang="en" href="https://careerkick.it/?lang=en">
   <link rel="alternate" hreflang="es" href="https://careerkick.it/?lang=es">
