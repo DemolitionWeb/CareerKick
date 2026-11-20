@@ -325,7 +325,8 @@ async function main() {
       if (!prev) byKey.set(k, { ...s });
       else { prev.b ??= s.b; prev.apps ??= s.apps; prev.goals ??= s.goals; }
     }
-    const stints = [...byKey.values()].sort((x, y) => x.a - y.a || (x.team < y.team ? -1 : x.team > y.team ? 1 : 0));
+    // a parità di arrivo (date con solo l'anno) prima il periodo già chiuso, poi quello ancora aperto
+    const stints = [...byKey.values()].sort((x, y) => x.a - y.a || end(x) - end(y) || (x.team < y.team ? -1 : x.team > y.team ? 1 : 0));
     // [club, campionato, anno arrivo, anno uscita, presenze, gol]; null = dato assente (uscita null = ancora lì o ignota)
     const c = mergeDuplicateClubs(stints.map((s, i) => {
       const next = stints[i + 1]?.a;
