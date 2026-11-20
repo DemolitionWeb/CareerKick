@@ -86,6 +86,10 @@ h3::before, .section-title::before { content: ""; width: 4px; height: 17px; back
 .about details { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
 .about summary { cursor: pointer; font-weight: 700; min-height: 32px; }
 .about details p { margin-top: 4px; }
+.lang-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin: 20px 0 8px; font-size: 14px; }
+.lang-links a { color: var(--muted); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+.lang-links a:hover, .lang-links a:focus-visible { color: var(--text); text-decoration: underline; }
+.lang-links a[aria-current] { color: var(--text); font-weight: 700; }
 
 /* scelte a segmenti (difficoltà, campionati, durata) */
 .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }

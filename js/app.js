@@ -139,6 +139,7 @@
     let canon = document.querySelector('link[rel="canonical"]');
     if (!canon) { canon = document.createElement("link"); canon.rel = "canonical"; document.head.appendChild(canon); }
     canon.href = "https://careerkick.it/" + (langParam() ? "?lang=" + langParam() : "");
+    document.querySelectorAll(".lang-links a").forEach((a) => a.toggleAttribute("aria-current", a.hreflang === settings.lang));
     $("#guessInput").placeholder = t("guessPh");
     $("#roomInput").placeholder = t("roomCodePh");
   }
