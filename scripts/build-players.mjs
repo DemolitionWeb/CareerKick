@@ -86,6 +86,11 @@ function positionCode(label) {
 
 // con più ruoli su Wikidata "portiere" spesso è una presenza d'emergenza (es. Enzo Pérez): vale il ruolo di movimento.
 // Tra i ruoli di movimento conta il più offensivo, quello che il giocatore ha di solito nell'infobox.
+// ruoli sbagliati su Wikidata, corretti a mano (id Wikidata → ruolo)
+const POSITION_FIX = {
+  Q287815: "FW" // Royston Drenthe: ala, su Wikidata risulta solo "portiere"
+};
+
 export function mainPosition(codes) {
   if (!codes?.size) return null;
   for (const c of ["FW", "MF", "DF"]) if (codes.has(c)) return c;
@@ -99,7 +104,8 @@ export function cleanStats(pos, years, apps, goals) {
   if (apps == null) return [null, null];                          // gol senza presenze non si possono verificare
   if (goals != null) {
     // un portiere rigorista (Butt, Chilavert) arriva a un gol ogni 7-8 partite; i gol subiti sono quasi uno a partita
-    const maxGoals = pos === "GK" ? Math.max(3, apps * 0.2) : apps * 1.5 + 3;
+    // con poche presenze 2-3 gol di un portiere sono quasi sempre gol subiti (Diallo al Rennes: 2 presenze, 3 "gol")
+    const maxGoals = pos === "GK" ? (apps < 15 ? 1 : Math.max(3, apps * 0.2)) : apps * 1.5 + 3;
     if (goals > maxGoals) goals = null;
   }
   return [apps, goals];
@@ -213,7 +219,7 @@ async function main() {
         OPTIONAL { ?player wdt:P1532 ?nat OPTIONAL { ?nat wdt:P297 ?natIso } }
         OPTIONAL { ?player wdt:P27 ?cit OPTIONAL { ?cit wdt:P297 ?citIso } }
         OPTIONAL { ?player wdt:P413 ?pos . ?pos rdfs:label ?posLabel FILTER(lang(?posLabel) = "en") }
-      }`);
+      } ORDER BY ?player ?birth ?nat ?natIso ?cit ?citIso`); // ordine fisso: con più valori vince sempre lo stesso
     for (const r of info) {
       const p = players.get(qid(r.player.value));
       if (r.name && !p.n) p.n = r.name.value;
@@ -302,9 +308,15 @@ async function main() {
   // 4) pulizia e assemblaggio
   const out = [];
   for (const [id, p] of players) {
-    p.pos = mainPosition(p.poss);
+    p.pos = POSITION_FIX[id] || mainPosition(p.poss);
     if (!p.n || !p.b || !p.pos || !p.stints) continue;
-    // stesso club nello stesso anno = un solo periodo, unendo le statistiche se una delle due righe le ha
+    // stesso club nello stesso anno = un solo periodo, unendo le statistiche se una delle due righe le ha.
+    // Wikidata restituisce le righe in un ordine che cambia a ogni richiesta: senza un ordine fisso le statistiche
+    // dipendevano dal caso (El Shaarawy alla Roma 2016-2019: a volte 93 presenze, a volte le 16 del prestito).
+    // Vince il periodo più lungo (uscita più tarda, null = ancora lì), poi quello con più presenze.
+    const end = (s) => s.b ?? Infinity;
+    p.stints.sort((x, y) => Math.floor(x.a) - Math.floor(y.a) || end(y) - end(x) || (y.apps ?? -1) - (x.apps ?? -1) ||
+      (y.goals ?? -1) - (x.goals ?? -1) || x.a - y.a || (x.team < y.team ? -1 : x.team > y.team ? 1 : 0));
     const byKey = new Map();
     for (const s of p.stints) {
       if (!clubs[s.team] || EXCLUDE_TEAM.test(clubs[s.team].en || Object.values(clubs[s.team])[0])) continue;
@@ -313,7 +325,7 @@ async function main() {
       if (!prev) byKey.set(k, { ...s });
       else { prev.b ??= s.b; prev.apps ??= s.apps; prev.goals ??= s.goals; }
     }
-    const stints = [...byKey.values()].sort((x, y) => x.a - y.a);
+    const stints = [...byKey.values()].sort((x, y) => x.a - y.a || (x.team < y.team ? -1 : x.team > y.team ? 1 : 0));
     // [club, campionato, anno arrivo, anno uscita, presenze, gol]; null = dato assente (uscita null = ancora lì o ignota)
     const c = mergeDuplicateClubs(stints.map((s, i) => {
       const next = stints[i + 1]?.a;
@@ -328,7 +340,9 @@ async function main() {
     if (c.length < 2 || c[c.length - 1][2] < SINCE) continue;
     if (!c.some((x) => x[1] !== "X")) continue;
     out.push({ q: id, n: p.n, nat: p.nat || p.cit || "", pos: p.pos, b: p.b, sl: p.sl, c,
-      a: [...(p.a || [])].filter((x) => x !== p.n && x.length > 2).slice(0, 6) });
+      // i 6 soprannomi più corti (di solito quelli usati davvero, "Kaká", "Pato"), in ordine fisso
+      a: [...(p.a || [])].filter((x) => x !== p.n && x.length > 2)
+        .sort((x, y) => x.length - y.length || (x < y ? -1 : x > y ? 1 : 0)).slice(0, 6) });
   }
 
   // notorietà: percentili sui sitelinks dei giocatori dei 5 grandi campionati (top 20% = tier 1, poi 30% = tier 2,
@@ -339,7 +353,9 @@ async function main() {
   out.sort((a, b) => a.n.localeCompare(b.n));
 
   const usedClubs = {};
-  out.forEach((p) => p.c.forEach(([team]) => (usedClubs[team] = clubs[team])));
+  // lingue in ordine fisso, così due generazioni con gli stessi dati danno lo stesso file
+  const sortKeys = (o) => (o && typeof o === "object" ? Object.fromEntries(Object.entries(o).sort(([x], [y]) => (x < y ? -1 : 1))) : o);
+  out.forEach((p) => p.c.forEach(([team]) => (usedClubs[team] = sortKeys(clubs[team]))));
 
   const header = `/* GENERATO da scripts/build-players.mjs il ${new Date().toISOString().slice(0, 10)} — non modificare a mano.
  * Fonte: Wikidata (CC0). ${out.length} giocatori, ${Object.keys(usedClubs).length} club. */\n`;
