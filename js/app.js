@@ -203,10 +203,12 @@
 
   function nextRound() {
     game.idx++;
-    // nella sfida 1v1 il rimescolamento usa il generatore col seme comune, così i due restano allineati
+    // nella sfida 1v1 il rimescolamento usa il generatore col seme comune, così i due restano allineati;
+    // il nuovo giro si accoda invece di ripartire da 0: l'indice è quello dei messaggi (oppDone, msg.idx)
+    // e ripartendo da 0 una risposta del giro prima finiva sul giocatore nuovo
     if (game.idx >= game.queue.length) {
-      game.queue = game.mode === "duel" ? shuffle(game.queue.slice(), game.rnd) : freshQueue(game.queue);
-      game.idx = 0;
+      if (game.mode === "duel") game.queue = game.queue.concat(shuffle(game.pool.slice(), game.rnd));
+      else { game.queue = freshQueue(game.queue); game.idx = 0; }
     }
     const p = game.queue[game.idx];
     markSeen(p);
@@ -528,9 +530,9 @@
   }
 
   function startDuelGame({ seed, cfg }) {
-    const rnd = mulberry32(seed);
+    const rnd = mulberry32(seed), pool = buildPool(cfg.diff, false, cfg);
     game = {
-      mode: "duel", diffKey: cfg.diff, d: DIFF[cfg.diff], rnd, queue: shuffle(buildPool(cfg.diff, false, cfg), rnd),
+      mode: "duel", diffKey: cfg.diff, d: DIFF[cfg.diff], rnd, pool, queue: shuffle(pool.slice(), rnd),
       idx: -1, score: 0, solved: 0, opp: 0, oppSolved: 0, oppDone: {}, endAt: Date.now() + cfg.dur * 1000, timeLeft: cfg.dur, over: false
     };
     show("game");
