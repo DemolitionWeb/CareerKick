@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_2.outputs.page_url || steps.deployment_3.outputs.page_url || steps.deployment_4.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,8 +48,32 @@ jobs:
           echo "Versione dei file: $V"
 
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+      # Bug di GitHub (actions/deploy-pages#451, novembre 2026): a volte la pubblicazione subito dopo il caricamento
+      # non trova il pacchetto ("No artifacts named github-pages"). Si riprova solo la pubblicazione, dopo 5, 20 e 60 s:
+      # rilanciare l'intera esecuzione ricaricherebbe il pacchetto e fallirebbe con "Multiple artifacts named github-pages".
+      # Togliere i tentativi quando GitHub avrà corretto il bug.
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 5
+      - id: deployment_2
+        if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - if: steps.deployment_2.outcome == 'failure'
+        run: sleep 20
+      - id: deployment_3
+        if: steps.deployment_2.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - if: steps.deployment_3.outcome == 'failure'
+        run: sleep 60
+      # ultimo tentativo senza continue-on-error: se fallisce anche questo, il deploy risulta fallito
+      - id: deployment_4
+        if: steps.deployment_3.outcome == 'failure'
+        uses: actions/deploy-pages@v5
