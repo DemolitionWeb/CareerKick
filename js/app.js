@@ -102,7 +102,9 @@
   // una ripetizione capita una volta su due): si ricordano gli ultimi usciti, per id Wikidata che resta uguale
   // anche dopo un aggiornamento dei dati, e si propongono prima quelli mai visti, in ordine casuale.
   // Finiti quelli, tornano i visti da più tempo: la metà più vecchia rimescolata, così l'ordine non si ripete uguale.
-  const SEEN_MAX = 2000;
+  // la memoria deve contenere tutto il gruppo più grande (Difficile, oltre 5000 giocatori): con un limite fisso
+  // più basso i visti più vecchi venivano dimenticati e tornavano come "mai visti" prima di finire il giro
+  const SEEN_MAX = PLAYERS.length;
   let seen = store.get("seen", []);
   function markSeen(p) {
     seen = seen.filter((q) => q !== p.q);
