@@ -154,6 +154,12 @@ h3::before, .section-title::before { content: ""; width: 4px; height: 17px; back
 .career li.new { box-shadow: inset 0 0 0 2px var(--accent); animation: wipe .45s ease-out both; }
 @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
+/* Chi sono?: un indizio per riga, quelli ancora nascosti a righe come i club nascosti */
+.clues { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 4px; }
+.clues li { background: var(--card); padding: 10px 12px; border-left: 3px solid var(--accent); line-height: 1.4; }
+.clues small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 2px; }
+.clues li.locked { background: repeating-linear-gradient(135deg, var(--card) 0 10px, var(--bg-2) 10px 20px); color: var(--muted); border-left-color: var(--card-2); }
+.clues li.new { box-shadow: inset 0 0 0 2px var(--accent); animation: wipe .45s ease-out both; }
 .info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 10px; }
 .info div { background: var(--card); padding: 8px 10px; border-top: 3px solid var(--blue); min-width: 0; }
 .info small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }

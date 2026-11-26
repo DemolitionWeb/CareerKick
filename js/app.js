@@ -61,6 +61,77 @@
     try { return new Intl.DisplayNames([settings.lang], { type: "region" }).of(code); } catch (e) { return code; }
   }
 
+  // ---------- CHI SONO? ----------
+  // Tre indizi scritti a partire dalla carriera, dal più difficile al più facile:
+  // 1) solo numeri (club, paesi, anni, l'esperienza migliore in un club), 2) ruolo, nazionalità, anno di nascita
+  // e paesi in cui ha giocato, 3) il club dove è rimasto più a lungo e un altro. Prima si indovina, più punti.
+  const WHOAMI_PTS = [100, 60, 30];
+  const CUR_YEAR = new Date().getFullYear();
+  // il paese dei club è in js/club-countries.js: senza quel file gli indizi restano validi, solo senza i paesi
+  const countryOf = (id) => (typeof CLUB_COUNTRY !== "undefined" && CLUB_COUNTRY[id]) || null;
+  const listFmt = (items) => {
+    try { return new Intl.ListFormat(settings.lang, { type: "conjunction" }).format(items); } catch (e) { return items.join(", "); }
+  };
+  function whoamiClues(p) {
+    const st = p.c.map(([id, , from, to, apps, goals]) => ({ id, from, to, apps, goals }));
+    const last = st.reduce((a, s) => (s.from > a.from ? s : a));
+    // l'uscita manca solo nell'ultimo periodo e vuol dire "ancora lì" oppure "data ignota" (spesso per chi si è ritirato):
+    // "a oggi" solo se il periodo è recente o il giocatore ha l'età per giocare ancora
+    const open = last.to == null && (last.from >= CUR_YEAR - 4 || p.b >= CUR_YEAR - 36);
+    const stop = (s) => s.to ?? (s === last && open ? CUR_YEAR : s.from + 1);
+    const span = (from, to, isOpen) => (to == null ? `${from}–${isOpen ? t("today") : ""}` : to === from ? `${from}` : `${from}–${to}`);
+
+    // per club: anni e presenze sommati sui vari periodi; un ritorno conta come periodo nuovo solo dopo un distacco
+    // (prestito e riscatto di seguito restano un periodo unico)
+    const byClub = new Map();
+    for (const s of st) {
+      const k = byClub.get(s.id) || { id: s.id, apps: 0, years: 0, from: s.from, to: s.to, spells: 0, lastTo: 0 };
+      if (s.from > k.lastTo) k.spells++;
+      k.lastTo = Math.max(k.lastTo, stop(s));
+      k.apps += s.apps || 0;
+      k.years += Math.max(stop(s) - s.from, 0.5);
+      k.to = s === last && s.to == null ? null : Math.max(k.to ?? 0, s.to ?? s.from);
+      byClub.set(s.id, k);
+    }
+    const clubs = [...byClub.values()];
+    const countries = [...new Set(st.map((s) => countryOf(s.id)).filter(Boolean))];
+    const first = Math.min(...st.map((s) => s.from));
+    const end = Math.max(...st.map((s) => s.to ?? s.from));
+    const career = open ? span(first, null, true) : span(first, end);
+
+    // 1) difficile: l'esperienza con più gol per attaccanti e centrocampisti (se almeno 10), altrimenti quella con più presenze.
+    // Più gol che presenze è un errore di Wikidata (Amanatidis: 189 gol in 140 presenze): quel periodo non si usa
+    const withStats = st.filter((s) => s.apps > 0 && !(s.goals > s.apps));
+    const pick = (better) => withStats.reduce((a, s) => (!a || better(s, a) ? s : a), null);
+    const mostApps = pick((s, a) => s.apps > a.apps);
+    const mostGoals = pick((s, a) => s.goals > a.goals || (s.goals === a.goals && s.apps > a.apps));
+    const scorer = p.pos !== "GK" && p.pos !== "DF" && mostGoals && mostGoals.goals >= 10;
+    const best = scorer ? mostGoals : mostApps;
+    let c1 = clubs.length === 1 ? t("wCareerOne", { span: career })
+      : countries.length > 1 ? t("wCareerCountries", { n: clubs.length, c: countries.length, span: career })
+      : t("wCareer", { n: clubs.length, span: career });
+    if (best) {
+      const v = { g: best.goals, a: best.apps, span: span(best.from, best.to, best === last && open) };
+      c1 += " " + (scorer ? t("wBestGoals", v) : p.pos !== "GK" && best.goals >= 2 ? t("wBestAppsGoals", v) : t("wBestApps", v));
+    }
+
+    // 2) medio
+    let c2 = `${t(p.pos)} · ${natName(p.nat)} · ${t("born")} ${p.b}.`;
+    if (countries.length === 1 && countries[0] === p.nat) c2 += " " + t("wHomeOnly");
+    else if (countries.length) c2 += " " + t("wCountries", { list: listFmt(countries.map(natName)) });
+
+    // 3) facile: il club dove è rimasto più a lungo, poi quello con più presenze tra gli altri
+    const ranked = clubs.slice().sort((a, b) => b.years - a.years || b.apps - a.apps);
+    const main = ranked[0];
+    const mainSpan = span(main.from, main.to, main.to == null && open);
+    let c3 = clubs.length === 1 ? t("wOnlyClub", { club: clubName(main.id), span: mainSpan })
+      : main.spells > 1 ? t("wLongestBack", { club: clubName(main.id), n: main.spells, span: mainSpan })
+      : t("wLongest", { club: clubName(main.id), span: mainSpan });
+    const other = ranked.slice(1).sort((a, b) => b.apps - a.apps || b.years - a.years)[0];
+    if (other) c3 += " " + t("wAlso", { club: clubName(other.id) });
+    return [c1, c2, c3];
+  }
+
   function norm(s) {
     return s.toLowerCase()
       .replace(/ł/g, "l").replace(/ø/g, "o").replace(/đ/g, "d").replace(/ß/g, "ss").replace(/æ/g, "ae").replace(/ı/g, "i")
@@ -215,11 +286,13 @@
     const p = game.queue[game.idx];
     markSeen(p);
     const d = game.d;
+    const who = game.mode === "whoami"; // un tentativo per indizio: sbagliare o chiedere un indizio svela il successivo
     Object.assign(game, {
       target: p,
-      clues: p.c.length + (d.infoUpfront ? 0 : INFO_KEYS.length),
-      revealed: Math.min(d.startClubs, p.c.length),
-      attemptsLeft: d.attempts,
+      clues: who ? WHOAMI_PTS.length : p.c.length + (d.infoUpfront ? 0 : INFO_KEYS.length),
+      revealed: who ? 1 : Math.min(d.startClubs, p.c.length),
+      maxAttempts: who ? WHOAMI_PTS.length : d.attempts,
+      attemptsLeft: who ? WHOAMI_PTS.length : d.attempts,
       wrongs: [], marks: [], roundOver: false, win: false, pts: 0, prevRevealed: 0,
       closed: false, result: null, oppOut: false
     });
@@ -256,7 +329,7 @@
     stopTimer();
     if (win) {
       game.marks.push("ok");
-      game.pts = game.attemptsLeft * game.d.mult * 10;
+      game.pts = game.mode === "whoami" ? WHOAMI_PTS[game.revealed - 1] * game.d.mult : game.attemptsLeft * game.d.mult * 10;
       game.score += game.pts; game.solved++;
     }
     if (game.mode === "duel") {
@@ -317,6 +390,18 @@
     renderHud();
 
     const showAll = g.roundOver;
+    // in "Chi sono?" la carriera resta nascosta fino alla fine del round, quando compare come soluzione
+    const who = g.mode === "whoami";
+    $("#cluesTitle").hidden = $("#clues").hidden = !who;
+    $("#careerTitle").hidden = $("#career").hidden = $("#info").hidden = who && !showAll;
+    if (who) {
+      $("#clues").innerHTML = whoamiClues(p).map((text, i) => {
+        const label = `<small>${esc(t("clue", { n: i + 1 }))}</small>`;
+        if (i >= g.revealed && !showAll) return `<li class="locked">${label}${IC.lock}</li>`;
+        const fresh = !showAll && g.prevRevealed && i === g.revealed - 1 ? "new" : "";
+        return `<li class="${fresh}">${label}<span>${esc(text)}</span></li>`;
+      }).join("");
+    }
     const clubsShown = showAll ? p.c.length : Math.min(g.revealed, p.c.length);
     const prevClubs = Math.min(g.prevRevealed, p.c.length);
     $("#career").innerHTML = p.c.map((c, i) => {
@@ -385,9 +470,9 @@
     if (g.mode === "survival") text = `CareerKick ⚽ ${t("modeSurvival")} (${t(g.diffKey)}): ${g.solved} 🏆 ${g.score} ${t("points")}`;
     else {
       const sq = g.marks.map((m) => (m === "ok" ? "🟩" : m === "wrong" ? "🟥" : "⬜")).join("");
-      const used = g.d.attempts - g.attemptsLeft + (g.win ? 1 : 0);
-      const head = g.mode === "daily" ? `${t("modeDaily")} ${todayKey()}` : `${t("modeClassic")} (${t(g.diffKey)})`;
-      text = `CareerKick ⚽ ${head}\n${sq} ${g.win ? used : "X"}/${g.d.attempts}`;
+      const used = g.maxAttempts - g.attemptsLeft + (g.win ? 1 : 0);
+      const head = g.mode === "daily" ? `${t("modeDaily")} ${todayKey()}` : `${t(g.mode === "whoami" ? "modeWhoami" : "modeClassic")} (${t(g.diffKey)})`;
+      text = `CareerKick ⚽ ${head}\n${sq} ${g.win ? used : "X"}/${g.maxAttempts}`;
     }
     if (navigator.share) navigator.share({ text }).catch(() => {});
     else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast(t("copied")), () => toast(text));

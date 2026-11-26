@@ -43,12 +43,12 @@ jobs:
       - name: Commit se ci sono novità
         id: commit
         run: |
-          if git diff --quiet js/data.js; then
+          if git diff --quiet js/data.js js/club-countries.js; then
             echo "Nessun cambiamento"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add js/data.js
+          git add js/data.js js/club-countries.js
           git commit -m "Aggiornamento giocatori dopo il calciomercato ($(date +%Y-%m-%d))"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"

@@ -108,6 +108,10 @@
             <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeClassic">Partita singola</strong><small data-i18n="modeClassicDesc">Un giocatore, indizi progressivi</small></span>
           </button>
+          <button class="mode-card" data-mode="whoami">
+            <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span>
+            <span class="mode-text"><strong data-i18n="modeWhoami">Chi sono?</strong><small data-i18n="modeWhoamiDesc">3 indizi sulla carriera: prima indovini, più punti fai</small></span>
+          </button>
           <button class="mode-card" data-mode="daily">
             <span class="mode-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
             <span class="mode-text"><strong data-i18n="modeDaily">Sfida del giorno</strong><small data-i18n="modeDailyDesc">Lo stesso giocatore per tutti, ogni giorno</small></span>
@@ -190,7 +194,9 @@
       <!-- GAME -->
       <section id="screen-game" class="screen">
         <div class="hud" id="hud"></div>
-        <h2 class="section-title" data-i18n="career"></h2>
+        <h2 class="section-title" id="cluesTitle" data-i18n="modeWhoami" hidden></h2>
+        <ol class="clues" id="clues" hidden></ol>
+        <h2 class="section-title" id="careerTitle" data-i18n="career"></h2>
         <ol class="career" id="career"></ol>
         <div class="info" id="info"></div>
         <div class="wrongs" id="wrongs"></div>
@@ -227,6 +233,7 @@
 
   <script src="js/i18n.js?v=dev"></script>
   <script src="js/data.js?v=dev"></script>
+  <script src="js/club-countries.js?v=dev"></script>
   <script src="js/app.js?v=dev"></script>
 </body>
 </html>

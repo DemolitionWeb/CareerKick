@@ -7,7 +7,8 @@
 const VERSION = "dev";
 const CACHE = "careerkick-" + VERSION;
 const SHELL = [
-  "./", "index.html", "css/style.css?v=" + VERSION, "js/i18n.js?v=" + VERSION, "js/data.js?v=" + VERSION, "js/app.js?v=" + VERSION,
+  "./", "index.html", "css/style.css?v=" + VERSION, "js/i18n.js?v=" + VERSION, "js/data.js?v=" + VERSION, "js/club-countries.js?v=" + VERSION,
+  "js/app.js?v=" + VERSION,
   "manifest.webmanifest", "icon.svg", "icons/icon-192.png", "icons/icon-512.png"
 ];
 

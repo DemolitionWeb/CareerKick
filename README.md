@@ -23,7 +23,8 @@ Prende da Wikidata (i dati strutturati dietro gli infobox di Wikipedia, licenza 
 - L'import richiede circa 10 minuti; ultimo risultato: oltre 5.000 giocatori e circa 3.500 club.
 - Pulizia dei dati: sono escluse le calciatrici (il quiz è sul calcio maschile) e, quando Wikidata ha due voci per lo stesso club (es. "AEK Athens" e "A.E.K."), il periodo compare una volta sola.
 - **Filtro campionati**: Tutti / Singolo (ha giocato in quel campionato) / Multi (ha giocato in *tutti* i campionati scelti).
-- **Modalità**: Partita singola, Sfida del giorno (stesso giocatore per tutti), Sopravvivenza (3 vite + timer), Sfida 1v1 online.
+- **Modalità**: Partita singola, Chi sono?, Sfida del giorno (stesso giocatore per tutti), Sopravvivenza (3 vite + timer), Sfida 1v1 online.
+- **Chi sono?**: 3 indizi scritti a partire dalla carriera, dal più difficile al più facile (numeri della carriera; ruolo, nazionalità, anno di nascita e paesi; il club dove è rimasto più a lungo e un altro). Ogni errore o richiesta di indizio svela il successivo; punti 100 / 60 / 30 moltiplicati per la difficoltà. La carriera completa compare alla fine del round. I paesi dei club sono in `js/club-countries.js`, generato da `build-players.mjs` insieme a `js/data.js` (solo quello: `node scripts/build-players.mjs --countries-only`).
 - **Sfida 1v1**: chi crea la stanza riceve un codice di 6 caratteri, nuovo ogni volta, e sceglie la durata (2/3/5 minuti); l'altro entra col codice o col link `?duel=CODICE`. Stesso giocatore per entrambi: chi lo indovina per primo prende i punti e si passa tutti e due al successivo (chi sbaglia o si arrende aspetta l'altro); vince chi ha più punti allo scadere. Collegamento diretto tra i browser con [PeerJS](https://peerjs.com) (WebRTC), caricato solo quando serve: niente server né account da gestire, ma su alcune reti mobili o aziendali la connessione può non riuscire.
 - Statistiche locali, condivisione del risultato, PWA installabile.
 

@@ -51,6 +51,15 @@ const I18N = {
     you: "Tu", opponent: "Avversario", youWin: "Hai vinto!", youLose: "Hai perso", draw: "Pareggio",
     rematch: "Rivincita", rematchAsked: "Rivincita chiesta…", rematchOffer: "L'avversario vuole la rivincita",
     oppSolved: "L'avversario l'ha indovinato", nobodySolved: "Nessuno l'ha indovinato", bothSolved: "Indovinato da tutti e due!", nextPlayer: "Prossimo giocatore…",
+    modeWhoami: "Chi sono?", modeWhoamiDesc: "3 indizi sulla carriera: prima indovini, più punti fai",
+    clue: "Indizio {n}", today: "oggi",
+    wCareer: "Ho giocato in {n} club ({span}).", wCareerCountries: "Ho giocato in {n} club di {c} paesi ({span}).",
+    wCareerOne: "Ho giocato in un solo club ({span}).",
+    wBestGoals: "In un club ho segnato {g} gol in {a} presenze ({span}).", wBestApps: "In un club ho collezionato {a} presenze ({span}).",
+    wBestAppsGoals: "In un club ho collezionato {a} presenze e {g} gol ({span}).",
+    wCountries: "Paesi in cui ho giocato: {list}.", wHomeOnly: "Ho giocato solo nel mio paese.",
+    wLongest: "Il club dove sono rimasto più a lungo: {club} ({span}).", wLongestBack: "Il club dove sono rimasto più a lungo: {club} ({n} periodi, {span}).",
+    wOnlyClub: "Il mio unico club, per tutta la carriera: {club} ({span}).", wAlso: "Ho vestito anche la maglia di {club}.",
     GK: "Portiere", DF: "Difensore", MF: "Centrocampista", FW: "Attaccante"
   },
   en: {
@@ -104,6 +113,15 @@ const I18N = {
     you: "You", opponent: "Opponent", youWin: "You win!", youLose: "You lose", draw: "Draw",
     rematch: "Rematch", rematchAsked: "Rematch requested…", rematchOffer: "Your opponent wants a rematch",
     oppSolved: "Your opponent got it", nobodySolved: "Nobody got it", bothSolved: "You both got it!", nextPlayer: "Next player…",
+    modeWhoami: "Who am I?", modeWhoamiDesc: "3 career clues: the sooner you guess, the more points",
+    clue: "Clue {n}", today: "today",
+    wCareer: "I played for {n} clubs ({span}).", wCareerCountries: "I played for {n} clubs in {c} countries ({span}).",
+    wCareerOne: "I played for just one club ({span}).",
+    wBestGoals: "At one club I scored {g} goals in {a} appearances ({span}).", wBestApps: "At one club I made {a} appearances ({span}).",
+    wBestAppsGoals: "At one club I made {a} appearances and scored {g} goals ({span}).",
+    wCountries: "Countries I played in: {list}.", wHomeOnly: "I only played in my home country.",
+    wLongest: "The club where I stayed longest: {club} ({span}).", wLongestBack: "The club where I stayed longest: {club} ({n} spells, {span}).",
+    wOnlyClub: "My only club, for my whole career: {club} ({span}).", wAlso: "I also played for {club}.",
     GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward"
   },
   es: {
@@ -157,6 +175,15 @@ const I18N = {
     you: "Tú", opponent: "Rival", youWin: "¡Has ganado!", youLose: "Has perdido", draw: "Empate",
     rematch: "Revancha", rematchAsked: "Revancha pedida…", rematchOffer: "Tu rival quiere la revancha",
     oppSolved: "Tu rival lo ha adivinado", nobodySolved: "Nadie lo ha adivinado", bothSolved: "¡Lo habéis adivinado los dos!", nextPlayer: "Siguiente jugador…",
+    modeWhoami: "¿Quién soy?", modeWhoamiDesc: "3 pistas sobre la carrera: cuanto antes aciertes, más puntos",
+    clue: "Pista {n}", today: "hoy",
+    wCareer: "Jugué en {n} clubes ({span}).", wCareerCountries: "Jugué en {n} clubes de {c} países ({span}).",
+    wCareerOne: "Jugué en un solo club ({span}).",
+    wBestGoals: "En un club marqué {g} goles en {a} partidos ({span}).", wBestApps: "En un club jugué {a} partidos ({span}).",
+    wBestAppsGoals: "En un club jugué {a} partidos y marqué {g} goles ({span}).",
+    wCountries: "Países en los que jugué: {list}.", wHomeOnly: "Solo jugué en mi país.",
+    wLongest: "El club donde estuve más tiempo: {club} ({span}).", wLongestBack: "El club donde estuve más tiempo: {club} ({n} etapas, {span}).",
+    wOnlyClub: "Mi único club en toda la carrera: {club} ({span}).", wAlso: "También jugué en {club}.",
     GK: "Portero", DF: "Defensa", MF: "Centrocampista", FW: "Delantero"
   },
   fr: {
@@ -210,6 +237,15 @@ const I18N = {
     you: "Toi", opponent: "Adversaire", youWin: "Tu as gagné !", youLose: "Tu as perdu", draw: "Égalité",
     rematch: "Revanche", rematchAsked: "Revanche demandée…", rematchOffer: "Ton adversaire veut une revanche",
     oppSolved: "Ton adversaire l'a trouvé", nobodySolved: "Personne ne l'a trouvé", bothSolved: "Vous l'avez trouvé tous les deux !", nextPlayer: "Joueur suivant…",
+    modeWhoami: "Qui suis-je ?", modeWhoamiDesc: "3 indices sur la carrière : plus tôt tu trouves, plus tu marques de points",
+    clue: "Indice {n}", today: "aujourd'hui",
+    wCareer: "J'ai joué dans {n} clubs ({span}).", wCareerCountries: "J'ai joué dans {n} clubs de {c} pays ({span}).",
+    wCareerOne: "J'ai joué dans un seul club ({span}).",
+    wBestGoals: "Dans un club, j'ai marqué {g} buts en {a} matchs ({span}).", wBestApps: "Dans un club, j'ai joué {a} matchs ({span}).",
+    wBestAppsGoals: "Dans un club, j'ai joué {a} matchs et marqué {g} buts ({span}).",
+    wCountries: "Pays où j'ai joué : {list}.", wHomeOnly: "J'ai joué uniquement dans mon pays.",
+    wLongest: "Le club où je suis resté le plus longtemps : {club} ({span}).", wLongestBack: "Le club où je suis resté le plus longtemps : {club} ({n} passages, {span}).",
+    wOnlyClub: "Mon seul club, toute ma carrière : {club} ({span}).", wAlso: "Un autre club où j'ai joué : {club}.",
     GK: "Gardien", DF: "Défenseur", MF: "Milieu", FW: "Attaquant"
   },
   de: {
@@ -263,6 +299,15 @@ const I18N = {
     you: "Du", opponent: "Gegner", youWin: "Du hast gewonnen!", youLose: "Du hast verloren", draw: "Unentschieden",
     rematch: "Revanche", rematchAsked: "Revanche angefragt…", rematchOffer: "Dein Gegner will eine Revanche",
     oppSolved: "Dein Gegner hat ihn erraten", nobodySolved: "Keiner hat ihn erraten", bothSolved: "Ihr habt ihn beide erraten!", nextPlayer: "Nächster Spieler…",
+    modeWhoami: "Wer bin ich?", modeWhoamiDesc: "3 Hinweise zur Karriere: je früher du es errätst, desto mehr Punkte",
+    clue: "Hinweis {n}", today: "heute",
+    wCareer: "Ich habe für {n} Vereine gespielt ({span}).", wCareerCountries: "Ich habe für {n} Vereine in {c} Ländern gespielt ({span}).",
+    wCareerOne: "Ich habe nur für einen Verein gespielt ({span}).",
+    wBestGoals: "Bei einem Verein habe ich {g} Tore in {a} Spielen erzielt ({span}).", wBestApps: "Bei einem Verein habe ich {a} Spiele bestritten ({span}).",
+    wBestAppsGoals: "Bei einem Verein habe ich {a} Spiele bestritten und {g} Tore erzielt ({span}).",
+    wCountries: "Länder, in denen ich gespielt habe: {list}.", wHomeOnly: "Ich habe nur in meinem Heimatland gespielt.",
+    wLongest: "Der Verein, bei dem ich am längsten war: {club} ({span}).", wLongestBack: "Der Verein, bei dem ich am längsten war: {club} ({n} Phasen, {span}).",
+    wOnlyClub: "Mein einziger Verein, die ganze Karriere lang: {club} ({span}).", wAlso: "Ich habe auch für {club} gespielt.",
     GK: "Torwart", DF: "Verteidiger", MF: "Mittelfeldspieler", FW: "Stürmer"
   },
   pt: {
@@ -316,6 +361,15 @@ const I18N = {
     you: "Tu", opponent: "Adversário", youWin: "Ganhaste!", youLose: "Perdeste", draw: "Empate",
     rematch: "Desforra", rematchAsked: "Desforra pedida…", rematchOffer: "O adversário quer a desforra",
     oppSolved: "O adversário acertou", nobodySolved: "Ninguém acertou", bothSolved: "Acertaram os dois!", nextPlayer: "Próximo jogador…",
+    modeWhoami: "Quem sou eu?", modeWhoamiDesc: "3 pistas sobre a carreira: quanto mais cedo acertares, mais pontos",
+    clue: "Pista {n}", today: "hoje",
+    wCareer: "Joguei em {n} clubes ({span}).", wCareerCountries: "Joguei em {n} clubes de {c} países ({span}).",
+    wCareerOne: "Joguei num só clube ({span}).",
+    wBestGoals: "Num clube marquei {g} golos em {a} jogos ({span}).", wBestApps: "Num clube fiz {a} jogos ({span}).",
+    wBestAppsGoals: "Num clube fiz {a} jogos e marquei {g} golos ({span}).",
+    wCountries: "Países onde joguei: {list}.", wHomeOnly: "Só joguei no meu país.",
+    wLongest: "O clube onde estive mais tempo: {club} ({span}).", wLongestBack: "O clube onde estive mais tempo: {club} ({n} passagens, {span}).",
+    wOnlyClub: "O meu único clube em toda a carreira: {club} ({span}).", wAlso: "Também representei {club}.",
     GK: "Guarda-redes", DF: "Defesa", MF: "Médio", FW: "Avançado"
   }
 };

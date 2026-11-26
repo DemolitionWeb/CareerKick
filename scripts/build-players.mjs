@@ -10,8 +10,11 @@
  * Per le stagioni che mancano su Wikidata si usano le stagioni vicine o, per le più recenti, il campionato attuale (P118).
  *
  * Limite noto: i periodi senza data di inizio vengono scartati perché non si possono ordinare.
+ *
+ * Scrive anche js/club-countries.js con il paese di ogni club, usato dagli indizi della modalità "Chi sono?".
+ * Per rigenerare solo quello dai club già in js/data.js:  node scripts/build-players.mjs --countries-only
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const args = Object.fromEntries(
@@ -20,6 +23,7 @@ const args = Object.fromEntries(
 const MIN_SITELINKS = Number(args["min-sitelinks"] ?? 25); // pagine Wikipedia in altre lingue = notorietà
 const SINCE = Number(args.since ?? 1995);                  // ultimo club dal SINCE in poi
 const OUT = args.out ?? "js/data.js";
+const COUNTRIES_OUT = "js/club-countries.js";
 
 const ENDPOINT = "https://query.wikidata.org/sparql";
 const UA = "CareerKickDataBuilder/0.1 (dataset builder for a football quiz app)";
@@ -364,10 +368,58 @@ async function main() {
 const PLAYERS = ${JSON.stringify(out)}.map((p, id) => Object.assign(p, { id }));\n`;
   writeFileSync(OUT, header + body);
   console.log(`Fatto: ${out.length} giocatori, ${Object.keys(usedClubs).length} club → ${OUT}`);
+  await writeClubCountries(Object.keys(usedClubs));
   console.log(`Tier: ${[1, 2, 3].map((t) => out.filter((p) => p.tier === t).length).join(" / ")}`);
   const skipped = Object.entries(unmappedPositions).sort((a, b) => b[1] - a[1]).slice(0, 10);
   if (skipped.length) console.log("Ruoli non riconosciuti (giocatori scartati se non ne hanno altri):", skipped);
 }
 
+// paese di ogni club (P17), come codice ISO a 2 lettere oppure ENG/SCO/WAL/NIR come le nazionalità dei giocatori.
+// Per i club britannici P17 è sempre "Regno Unito": la nazione si ricava dalla sede, dallo stadio o dalla località.
+async function clubCountries(ids) {
+  const out = {};
+  for (const [i, batch] of chunk(ids, 300).entries()) {
+    console.log(`Paesi dei club ${i + 1}/${Math.ceil(ids.length / 300)}…`);
+    const rows = await sparql(`
+      SELECT ?team ?c ?iso WHERE {
+        VALUES ?team { ${batch.map((q) => "wd:" + q).join(" ")} }
+        ?team wdt:P17 ?c . OPTIONAL { ?c wdt:P297 ?iso }
+      }`);
+    // i Paesi Bassi (Q55, Q29999), paese dei club olandesi, su Wikidata non hanno il codice ISO
+    for (const r of rows) out[qid(r.team.value)] ??= r.iso?.value || { Q55: "NL", Q29999: "NL" }[qid(r.c.value)];
+  }
+  const gb = ids.filter((q) => out[q] === "GB");
+  for (const [i, batch] of chunk(gb, 40).entries()) {
+    console.log(`Club britannici ${i + 1}/${Math.ceil(gb.length / 40)}…`);
+    const rows = await sparql(`
+      SELECT ?team ?nation WHERE {
+        VALUES ?team { ${batch.map((q) => "wd:" + q).join(" ")} }
+        VALUES ?nation { wd:Q21 wd:Q22 wd:Q25 wd:Q26 }
+        { ?team wdt:P159 ?loc } UNION { ?team wdt:P115 ?st . ?st wdt:P131 ?loc } UNION { ?team wdt:P131 ?loc }
+        ?loc wdt:P131* ?nation
+      }`);
+    for (const r of rows) out[qid(r.team.value)] = SPECIAL_NATIONS[qid(r.nation.value)];
+  }
+  for (const q of gb) if (out[q] === "GB") out[q] = "ENG"; // senza sede su Wikidata: quasi tutti dilettanti inglesi
+  for (const q in out) if (out[q] === "MC") out[q] = "FR"; // il Monaco gioca in Ligue 1: "Monaco" come paese svelerebbe il club
+  const missing = ids.filter((q) => !out[q]).length;
+  console.log(`Club senza paese: ${missing} su ${ids.length}`);
+  return Object.fromEntries(ids.filter((q) => out[q]).sort().map((q) => [q, out[q]]));
+}
+
+async function writeClubCountries(ids) {
+  const countries = await clubCountries(ids);
+  writeFileSync(COUNTRIES_OUT, `/* GENERATO da scripts/build-players.mjs il ${new Date().toISOString().slice(0, 10)} — non modificare a mano.
+ * Fonte: Wikidata (CC0). Paese di ogni club di js/data.js, per gli indizi di "Chi sono?". */
+const CLUB_COUNTRY = ${JSON.stringify(countries)};
+`);
+  console.log(`Paesi dei club → ${COUNTRIES_OUT}`);
+}
+
+async function countriesOnly() {
+  const ids = Object.keys(JSON.parse(readFileSync(OUT, "utf8").match(/const CLUBS = (\{.*?\});\n/)[1]));
+  await writeClubCountries(ids);
+}
+
 // esegue l'import solo se lanciato da riga di comando (non quando importato per usare shortName)
-if (import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((e) => { console.error(e); process.exit(1); });
+if (import.meta.url === pathToFileURL(process.argv[1]).href) ("countries-only" in args ? countriesOnly() : main()).catch((e) => { console.error(e); process.exit(1); });
